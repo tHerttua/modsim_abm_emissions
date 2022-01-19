@@ -6,8 +6,7 @@ class Environment:
         self.number_of_agents = number_of_agents
         self.time_steps = time_steps
         self.allowance_credits = allowance_credits
-        self.price_equilibrium
-        self.total_emissions
+        self.average_price
         self.agents = []
         self.results = []
 
@@ -21,3 +20,22 @@ class Environment:
     def randomize_emission_amount(self):
         emission_amount = 1000
         return emission_amount
+
+    def list_buyers_and_sellers(self, list_of_agents):
+        """
+        Based on the total amount
+        """
+
+    def do_magic(self):
+        """
+            • Buyers list sorted by max price
+            • Sellers list sorted by min price
+            • Market rules:
+                1. Buyers with higher min prices matches first with lowest min price -> price = average
+                2. Transaction and actualisation of Buyer/seller list
+                3. Step 3 until all sellers or buyers reached their max sell/buy capazity.
+        """
+
+
+
+
