@@ -4,7 +4,7 @@ class Agent:
         self.emissions_amount = emissions_amount
         self.allocated_credits = allocated_credits
         self.max_buying_price = 0
-        self.max_selling_price = 0
+        self.min_selling_price = 0
 
     def do_transaction(self):
         pass
