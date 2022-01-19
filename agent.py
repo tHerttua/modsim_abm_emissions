@@ -5,6 +5,7 @@ class Agent:
         self.allocated_credits = allocated_credits
         self.max_buying_price = initial_max_price
         self.min_selling_price = initial_min_price
+        self.number_transaction = 0
 
     def do_transaction(self):
         pass

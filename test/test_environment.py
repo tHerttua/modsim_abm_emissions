@@ -27,7 +27,7 @@ def test_sort_agents():
     sorted_buyers, sorted_sellers = abm_env.sort_sellers_buyers(buyers, sellers)
 
     assert len(sorted_buyers) != 0
-    for i in range(len(sorted_buyers)):
+    for i in range(len(sorted_buyers)-1):
         if i != len(sorted_buyers):
             print(sorted_buyers[i].max_buying_price)
             print(sorted_buyers[i+1].max_buying_price)

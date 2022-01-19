@@ -62,9 +62,8 @@ class Environment:
         Sorts buyers by their maximum buying price
         and sellers by their minimum selling price.
         """
-        buyers.sort(key=lambda x: x.max_buying_price, reverse=True)
-        sellers.sort(key=lambda x: x.min_selling_price, revers = False )
-
+        buyers.sort(key=lambda x: x.max_buying_price, reverse= False)
+        sellers.sort(key=lambda x: x.min_selling_price, reverse = True )
 
         return buyers, sellers
 
@@ -77,6 +76,9 @@ class Environment:
                 2. Transaction and actualisation of Buyer/seller list
                 3. Step 3 until all sellers or buyers reached their max sell/buy capazity.
         """
+        while buyers[-1].max_buying_price >= sellers[-1].min_sellers_price:
+            transaction = min(buyers[-1].)
+
 
 
 
