@@ -24,17 +24,25 @@ def test_split_agents():
 def test_sort_agents():
     abm_env.create_agents()
     buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
-    sorted_buyers, sorted_sellers = abm_env.sort_sellers_buyers(buyers, sellers)
+    sorted_buyers, sorted_sellers = abm_env.sort_buyers_sellers(buyers, sellers)
 
     assert len(sorted_buyers) != 0
     for i in range(len(sorted_buyers)-1):
         if i != len(sorted_buyers):
             print(sorted_buyers[i].max_buying_price)
             print(sorted_buyers[i+1].max_buying_price)
-            assert sorted_buyers[i].max_buying_price >= sorted_buyers[i+1].max_buying_price
+            assert sorted_buyers[i].max_buying_price <= sorted_buyers[i+1].max_buying_price
+
+
+def test_do_transactions():
+    abm_env.create_agents()
+    buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
+    sorted_buyers, sorted_sellers = abm_env.sort_buyers_sellers(buyers, sellers)
+    x = abm_env.do_transaction(sorted_buyers, sorted_sellers)
 
 
 test_create_agents()
 test_split_agents()
 test_sort_agents()
+test_do_transactions()
 

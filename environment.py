@@ -57,7 +57,7 @@ class Environment:
 
         return buyers, sellers, satisfied
 
-    def sort_sellers_buyers(self, buyers, sellers):
+    def sort_buyers_sellers(self, buyers, sellers):
         """
         Sorts buyers by their maximum buying price
         and sellers by their minimum selling price.
@@ -66,6 +66,33 @@ class Environment:
         sellers.sort(key=lambda x: x.min_selling_price, reverse = True )
 
         return buyers, sellers
+
+    def check_transaction_condition(self, buyer, seller):
+        # simplify
+        if buyer.number_transaction_left != 0 and seller.number_transaction_left != 0:
+            if buyer.allocated_credits < buyer.emissions_amount and seller.allocated_credits > seller.emissions_amount:
+                return True
+
+    def do_transaction(self, buyers, sellers):
+        """
+        WORK IN PROGRESS
+
+        Iterates through the list of buyers in sequential order
+        buyer picks the seller promising lowest price and does transactions
+        until either transaction quota is depleted, or the emission allowance is satisfied
+        """
+
+        for buyer in buyers:
+            for seller in sellers:
+                i = 0
+                while self.check_transaction_condition(buyer, seller):
+                    i += 1
+                    print("transaction #" + str(i))
+                    buyer.do_transaction()
+                    buyer.add_credits()
+                    seller.do_transaction()
+                    seller.decrease_credits()
+
 
     def do_magic(self):
         """
@@ -76,8 +103,10 @@ class Environment:
                 2. Transaction and actualisation of Buyer/seller list
                 3. Step 3 until all sellers or buyers reached their max sell/buy capazity.
         """
-        while buyers[-1].max_buying_price >= sellers[-1].min_sellers_price:
-            transaction = min(buyers[-1].)
+        buyers, sellers, satisfied = self.list_buyers_sellers_satisfied(buyers, sellers)
+        sorted_b, sorted_s = self.sort_buyers_sellers(buyers, seller)
+        self.do_transaction(sorted_b, sorted_s)
+
 
 
 
