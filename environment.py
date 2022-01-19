@@ -14,8 +14,10 @@ class Environment:
     def create_agents(self):
         for _ in range(self.number_of_agents):
             emissions_amount = self.randomize_emission_amount()
+            buying_price = self.randomize_prices()
+            selling_price = self.randomize_prices()
             allocated_credits = self.allowance_credits
-            new_agent = Agent(emissions_amount, allocated_credits)
+            new_agent = Agent(emissions_amount, allocated_credits, buying_price, selling_price)
             self.agents.append(new_agent)
 
     def randomize_emission_amount(self):
@@ -27,10 +29,20 @@ class Environment:
 
         return emission_amount
 
+    def randomize_prices(self):
+        #testing purposes
+        original_price = 60
+        min_price = int(math.floor(original_price - original_price * 0.2))
+        max_price = int(math.floor(original_price + original_price * 0.2))
+        random_price = random.randint(min_price, max_price)
+
+        return random_price
+
     def list_buyers_sellers_satisfied(self):
         """
         Based on the amount of allowances versus emissions,
-        buyers and sellers are sorted in their respective lists
+        buyers and sellers are sorted in their respective lists.
+        Those who have equal amount of allowances and emissions are satisfied.
         """
         buyers = []
         sellers = []
@@ -38,7 +50,7 @@ class Environment:
         for agent in self.agents:
             if agent.allocated_credits > agent.emissions_amount:
                 sellers.append(agent)
-            elif agent.allocated_credits > agent.emissions_amount:
+            elif agent.allocated_credits < agent.emissions_amount:
                 buyers.append(agent)
             else:
                 satisfied.append(agent)
