@@ -62,17 +62,9 @@ class Environment:
         Sorts buyers by their maximum buying price
         and sellers by their minimum selling price.
         """
-        for buyer1 in buyers:
-            for buyer2 in buyers[1:]:
-                if buyer1.max_buying_price < buyer2.max_buying_price:
-                    buyer1_index, buyer2_index = buyers.index(buyer1), buyers.index(buyer2)
-                    buyers[buyer2_index], buyers[buyer1_index] = buyers[buyer1_index], buyers[buyer2_index]
+        buyers.sort(key=lambda x: x.max_buying_price, reverse=True)
+        sellers.sort(key=lambda x: x.min_selling_price, revers = False )
 
-        for seller1 in sellers:
-            for seller2 in sellers[1:]:
-                if seller1.min_selling_price < seller2.min_selling_price:
-                    seller1_index, seller2_index = sellers.index(seller1), sellers.index(seller2)
-                    sellers[seller2_index], sellers[seller1_index] = sellers[seller1_index], sellers[seller2_index]
 
         return buyers, sellers
 
