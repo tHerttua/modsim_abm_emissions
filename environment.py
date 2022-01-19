@@ -13,7 +13,7 @@ class Environment:
 
     def create_agents(self):
         for _ in range(self.number_of_agents):
-            emissions_amount = self.randomize_emission_amount
+            emissions_amount = self.randomize_emission_amount()
             allocated_credits = self.allowance_credits
             new_agent = Agent(emissions_amount, allocated_credits)
             self.agents.append(new_agent)
@@ -21,9 +21,8 @@ class Environment:
     def randomize_emission_amount(self):
         #testing purposes
         all_cr = self.allowance_credits
-        min_emission = math.floor(all_cr - all_cr * 0.2)
-        print(type(min_emission))
-        max_emission = math.floor(all_cr + all_cr * 0.2)
+        min_emission = int(math.floor(all_cr - all_cr * 0.2))
+        max_emission = int(math.floor(all_cr + all_cr * 0.2))
         emission_amount = random.randint(min_emission, max_emission)
 
         return emission_amount

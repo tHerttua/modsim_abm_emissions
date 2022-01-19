@@ -10,4 +10,9 @@ def test_create_agents():
     assert len(agents) != 0
 
 
-test_create_agents()
+def test_sort_agents():
+    abm_env.create_agents()
+    buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
+    sorted_buyers, sorted_sellers = abm_env.sort_sellers_buyers(buyers, sellers)
+    for buyer in sorted_buyers:
+        if buyer.
