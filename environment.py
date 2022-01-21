@@ -73,8 +73,9 @@ class Environment:
             if buyer.pre_allocated_credits < buyer.emissions_amount and seller.pre_allocated_credits > seller.emissions_amount:
                 if buyer.max_buying_price < seller.min_selling_price:
                     return True
+        return False
 
-    def do_transaction(self, buyers, sellers):
+    def do_transactions(self, buyers, sellers):
         """
         WORK IN PROGRESS
 

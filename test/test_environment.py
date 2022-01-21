@@ -21,6 +21,18 @@ def test_split_agents():
     assert sellers[0].emissions_amount < sellers[0].pre_allocated_credits
 
 
+def test_identify_agents():
+    abm_env.create_agents()
+    buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
+
+    some_seller = sellers[2]
+    some_sellers_index = abm_env.agents.index(some_seller)
+
+    for buyer in buyers:
+        assert buyer in abm_env.agents
+    assert some_sellers_index is not None
+
+
 def test_sort_agents():
     abm_env.create_agents()
     buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
@@ -38,11 +50,6 @@ def test_do_transactions():
     abm_env.create_agents()
     buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
     sorted_buyers, sorted_sellers = abm_env.sort_buyers_sellers(buyers, sellers)
-    x = abm_env.do_transaction(sorted_buyers, sorted_sellers)
+    x = abm_env.do_transactions(sorted_buyers, sorted_sellers)
 
-
-test_create_agents()
-test_split_agents()
-test_sort_agents()
-test_do_transactions()
 
