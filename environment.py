@@ -48,9 +48,9 @@ class Environment:
         sellers = []
         satisfied = []
         for agent in self.agents:
-            if agent.allocated_credits > agent.emissions_amount:
+            if agent.pre_allocated_credits > agent.emissions_amount:
                 sellers.append(agent)
-            elif agent.allocated_credits < agent.emissions_amount:
+            elif agent.pre_allocated_credits < agent.emissions_amount:
                 buyers.append(agent)
             else:
                 satisfied.append(agent)
@@ -70,14 +70,15 @@ class Environment:
     def check_transaction_condition(self, buyer, seller):
         # simplify
         if buyer.number_transaction_left != 0 and seller.number_transaction_left != 0:
-            if buyer.allocated_credits < buyer.emissions_amount and seller.allocated_credits > seller.emissions_amount:
-                return True
+            if buyer.pre_allocated_credits < buyer.emissions_amount and seller.pre_allocated_credits > seller.emissions_amount:
+                if buyer.max_buying_price < seller.min_selling_price:
+                    return True
 
     def do_transaction(self, buyers, sellers):
         """
         WORK IN PROGRESS
 
-        Iterates through the list of buyers in sequential order
+        Iterates through the list of buyers in sequential activation order
         buyer picks the seller promising lowest price and does transactions
         until either transaction quota is depleted, or the emission allowance is satisfied
         """
@@ -105,7 +106,9 @@ class Environment:
         """
         buyers, sellers, satisfied = self.list_buyers_sellers_satisfied(buyers, sellers)
         sorted_b, sorted_s = self.sort_buyers_sellers(buyers, seller)
+        #for step in range(self.time_steps):
         self.do_transaction(sorted_b, sorted_s)
+        #reset number of transactions
 
 
 

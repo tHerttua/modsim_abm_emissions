@@ -7,7 +7,7 @@ def test_create_agents():
     abm_env.create_agents()
     agents = abm_env.agents
 
-    assert type(agents[0].allocated_credits) == int
+    assert type(agents[0].pre_allocated_credits) == int
     assert type(agents[0].max_buying_price) == int
 
 
@@ -17,8 +17,8 @@ def test_split_agents():
 
     assert len(buyers) != 0
     assert len(sellers) != 0
-    assert buyers[0].emissions_amount > buyers[0].allocated_credits
-    assert sellers[0].emissions_amount < sellers[0].allocated_credits
+    assert buyers[0].emissions_amount > buyers[0].pre_allocated_credits
+    assert sellers[0].emissions_amount < sellers[0].pre_allocated_credits
 
 
 def test_sort_agents():
