@@ -1,6 +1,6 @@
 import environment
 
-abm_env = environment.Environment(100, 1000, 365)
+abm_env = environment.Environment(100, 1000, 10, 365)
 
 
 def test_create_agents():
@@ -44,8 +44,8 @@ def test_sort_agents():
     assert len(sorted_buyers) != 0
     for i in range(len(sorted_buyers)-1):
         if i != len(sorted_buyers):
-            print(sorted_buyers[i].max_buying_price)
-            print(sorted_buyers[i+1].max_buying_price)
+            #print(sorted_buyers[i].max_buying_price)
+            #print(sorted_buyers[i+1].max_buying_price)
             assert sorted_buyers[i].max_buying_price <= sorted_buyers[i+1].max_buying_price
 
 
@@ -53,14 +53,15 @@ def test_do_transactions():
     abm_env.create_agents()
     buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
     sorted_buyers, sorted_sellers = abm_env.sort_buyers_sellers(buyers, sellers)
-    x = abm_env.do_transactions(sorted_buyers, sorted_sellers)
+    abm_env.do_transactions(sorted_buyers, sorted_sellers, step=1)
+    assert sorted_buyers[0].number_transaction_left != 10
 
 
 def test_reset_transactions_after_step():
     abm_env.create_agents()
     buyers, sellers, satisfied = abm_env.list_buyers_sellers_satisfied()
     sorted_buyers, sorted_sellers = abm_env.sort_buyers_sellers(buyers, sellers)
-    abm_env.do_transactions(sorted_buyers, sorted_sellers)
+    abm_env.do_transactions(sorted_buyers, sorted_sellers, step=1)
 
     satisfied_ids = []
     agents_ids = []
@@ -78,4 +79,7 @@ def test_reset_transactions_after_step():
     assert len(depleted) == 0
 
 
-test_reset_transactions_after_step()
+def test_do_transactions2():
+    pass
+
+
