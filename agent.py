@@ -1,3 +1,6 @@
+#Control the price update
+UPDATE_RATE = 0.05
+
 class Agent:
     def __init__(self, emissions_amount,
                  pre_allocated_credits,
@@ -39,11 +42,11 @@ class Agent:
         if len(self.deals_sold[step]) != 0:
             self.min_selling_price = self.min_selling_price_init
         else:
-            self.min_selling_price = self.min_selling_price * 0.9995
+            self.min_selling_price = self.min_selling_price * (1 - UPDATE_RATE)
 
     def update_buying_price(self, step):
         self.max_buying_price_series[step] = self.max_buying_price
         if len(self.deals_bought[step]) != 0:
             self.max_buying_price = self.max_buying_price_init
         else:
-            self.max_buying_price = self.max_buying_price * 1.0005
+            self.max_buying_price = self.max_buying_price * (1 + UPDATE_RATE)

@@ -5,6 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+#Control the amount of variance, could be made part of the environment for ease of use
+EMISSION_VARIANCE = 0.2
+PRICE_VARIANCE = 0.2
 
 class Environment:
     def __init__(self, number_of_agents, allowance_credits, agent_transaction_limit, time_steps):
@@ -31,21 +34,18 @@ class Environment:
     def randomize_emission_amount(self):
         #testing purposes
         all_cr = self.allowance_credits #DIvided here by 30 because every day this gets added to the emissions
-
         # if such division is made, it must be present in list_buyers_sellers_satisfied() and check_transaction_condition() methods
-        # introduced more bugs:
 
-
-        min_emission = int(math.floor(all_cr -all_cr *0.2)) #
-        max_emission = int(math.floor(all_cr + all_cr *0.2)) #*
+        min_emission = int(math.floor(all_cr -all_cr * EMISSION_VARIANCE))
+        max_emission = int(math.floor(all_cr + all_cr * EMISSION_VARIANCE))
         emission_amount = random.randint(min_emission, max_emission)
 
         return emission_amount
 
     def randomize_prices(self, original_price):
         #testing purposes
-        min_price = int(math.floor(original_price - original_price * 0.2))
-        max_price = int(math.floor(original_price + original_price * 0.2))
+        min_price = int(math.floor(original_price - original_price * PRICE_VARIANCE))
+        max_price = int(math.floor(original_price + original_price * PRICE_VARIANCE))
         random_price = random.randint(min_price, max_price)
 
         return random_price
@@ -83,7 +83,7 @@ class Environment:
         # simplify
         if buyer.number_transaction_left != 0 and seller.number_transaction_left != 0:
             if buyer.pre_allocated_credits < buyer.emissions_amount and seller.pre_allocated_credits > seller.emissions_amount:
-                if buyer.max_buying_price > seller.min_selling_price: #changed here < to > !!!!!!!!!!!!!!!
+                if buyer.max_buying_price > seller.min_selling_price: #changed here < to > !!!!!!!!!!!!!!! <- good catch!
                     return True
         return False
 
@@ -222,26 +222,26 @@ class Environment:
         average_price_bought, average_price_sold, average_emission, average_credits, average_max_buying_price, average_min_selling_price = self.averaging()
 
         plt.plot(self.num_transaction_series)
-        plt.xlabel('days')
-        plt.ylabel('Number Transactions')
+        plt.xlabel('steps')
+        plt.ylabel('Total umber Transactions')
         plt.show()
         plt.plot(average_price_bought)
-        plt.xlabel('days')
-        plt.ylabel('average prices bought')
+        plt.xlabel('steps')
+        plt.ylabel('Average prices bought')
         plt.show()
         plt.plot(average_price_sold)
-        plt.xlabel('days')
-        plt.ylabel('average prices sold')
+        plt.xlabel('steps')
+        plt.ylabel('Average prices sold')
         plt.show()
         plt.plot(average_emission)
         plt.plot(average_credits)
         plt.xlabel('days')
-        plt.ylabel('average emission and credits')
+        plt.ylabel('Average emission and credits')
         plt.show()
         plt.plot(average_min_selling_price)
         plt.plot(average_max_buying_price)
         plt.xlabel('days')
-        plt.ylabel('average max price I am willing to pay  & average min price I am willing to sell')
+        plt.ylabel('Average max price for buying & average min price for selling')
         plt.show()
 
     def do_magic(self, version=1):
