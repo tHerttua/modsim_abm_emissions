@@ -9,10 +9,11 @@ from environment import Environment
 """
 
 if __name__ == '__main__':
-    env = Environment(number_of_agents=300,
-                      allowance_credits=1000,
-                      agent_transaction_limit=10,
+    env = Environment(number_of_agents_per_group=3,
+                      number_of_agents_group=100,
+                      allowance_credits=320,
+                      agent_transaction_limit=3,
                       time_steps=365)
     env.create_agents()
-    env.do_magic(version=2)
+    env.do_magic(version=3)
 

@@ -7,11 +7,12 @@ import numpy as np
 
 #Control the amount of variance, could be made part of the environment for ease of use
 EMISSION_VARIANCE = 0.2
-PRICE_VARIANCE = 0.2
+PRICE_VARIANCE = 0.8
 
 class Environment:
-    def __init__(self, number_of_agents, allowance_credits, agent_transaction_limit, time_steps):
-        self.number_of_agents = number_of_agents
+    def __init__(self, number_of_agents_per_group, number_of_agents_group, allowance_credits, agent_transaction_limit, time_steps):
+        self.number_of_agents = number_of_agents_per_group * number_of_agents_group
+        self.number_of_agents_group = number_of_agents_group
         self.time_steps = time_steps
         self.allowance_credits = allowance_credits
         self.agent_transaction_limit = agent_transaction_limit
@@ -19,22 +20,37 @@ class Environment:
         self.agents = []
         self.results = []
         self.num_transaction_series = []
+        self.num_reduce_emission_series = []
+        self.agents_no_emission_added = [i for i in range(0, self.number_of_agents)]
+        self.period = 0
 
     def create_agents(self):
+        """
+        Creates agents based on the initial values.
+        Makes sure the inital maximum buying price is significantly lower than the initial minimum selling price
+        """
         for _ in range(self.number_of_agents):
             original_price = 60
-            emissions_amount = self.randomize_emission_amount()
-            buying_price = self.randomize_prices(original_price - 10 )#the max price I would pay must be lower as the price <- already picked from random pool
-            selling_price = self.randomize_prices(original_price + 10 )# I would sell a certificate, vice versa, the agent would be stupid
-            allocated_credits = self.allowance_credits #later it is going to be added <- introduced a bug, need to be allocated
+            emissions_amount = 0
+            buying_price = self.randomize_prices(original_price-20)
+            selling_price = self.randomize_prices(original_price+20)
+            allocated_credits = self.allowance_credits
             time_steps = self.time_steps
-            new_agent = Agent(emissions_amount, allocated_credits, self.agent_transaction_limit, buying_price, selling_price, time_steps)
+            new_agent = Agent(emissions_amount,
+                              allocated_credits/2,
+                              self.agent_transaction_limit,
+                              buying_price,
+                              selling_price,
+                              time_steps,
+                              original_price)
+
             self.agents.append(new_agent)
 
     def randomize_emission_amount(self):
-        #testing purposes
-        all_cr = self.allowance_credits #DIvided here by 30 because every day this gets added to the emissions
-        # if such division is made, it must be present in list_buyers_sellers_satisfied() and check_transaction_condition() methods
+        """
+        The total allowance credits are divided per month because they are increased daily
+        """
+        all_cr = self.allowance_credits /31*self.number_of_agents_group
 
         min_emission = int(math.floor(all_cr -all_cr * EMISSION_VARIANCE))
         max_emission = int(math.floor(all_cr + all_cr * EMISSION_VARIANCE))
@@ -43,7 +59,6 @@ class Environment:
         return emission_amount
 
     def randomize_prices(self, original_price):
-        #testing purposes
         min_price = int(math.floor(original_price - original_price * PRICE_VARIANCE))
         max_price = int(math.floor(original_price + original_price * PRICE_VARIANCE))
         random_price = random.randint(min_price, max_price)
@@ -80,10 +95,28 @@ class Environment:
         return buyers, sellers
 
     def check_transaction_condition(self, buyer, seller):
-        # simplify
-        if buyer.number_transaction_left != 0 and seller.number_transaction_left != 0:
-            if buyer.pre_allocated_credits < buyer.emissions_amount and seller.pre_allocated_credits > seller.emissions_amount:
-                if buyer.max_buying_price > seller.min_selling_price: #changed here < to > !!!!!!!!!!!!!!! <- good catch!
+        """
+        Basic skeleton
+        """
+        if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
+            if buyer.pre_allocated_credits < buyer.emissions_amount and \
+                    seller.pre_allocated_credits > seller.emissions_amount:
+                if buyer.max_buying_price > seller.min_selling_price:
+                    return True
+        return False
+
+    def check_transaction_condition3(self, buyer, seller):
+        """
+        First check if both buyer and seller have transactions left for the time step
+        Then buyer check if the emissions (still) exceed the allowed amount,
+        and seller checks if their emissions are (still) lower than the allowed amount OR
+        Seller will also agree if they are willing to drop emissions for this transaction
+        Last, if the buying price is higher than selling price, the transaction can be made
+        """
+        if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
+            if buyer.pre_allocated_credits < buyer.emissions_amount and \
+                    (seller.pre_allocated_credits > seller.emissions_amount or seller.willingness_to_reduce >= 1):
+                if buyer.max_buying_price > seller.min_selling_price:
                     return True
         return False
 
@@ -107,11 +140,10 @@ class Environment:
 
     def do_transactions2(self, buyers, sellers, step):
         """
-        WORK IN PROGRESS
-
         Iterates through the list of buyers in sequential activation order
         buyer picks the seller promising lowest price and does transactions
-        until either transaction quota is depleted, or the emission allowance is satisfied
+        until either transaction quota is depleted, or the emission allowance is satisfied.
+        Updates buyers and sellers price and tracks the transactions.
         """
         num_transaction = 0
 
@@ -123,8 +155,7 @@ class Environment:
 
                 while self.check_transaction_condition(buyer, seller):
                     i += 1
-                    num_transaction = num_transaction + i
-                    #print("transaction #" + str(i))
+                    num_transaction = num_transaction + 1
                     buyer.do_transaction()
                     buyer.add_credits()
                     seller.do_transaction()
@@ -145,35 +176,87 @@ class Environment:
 
     def do_transactions3(self, buyers, sellers, step):
         """
-        More advanced transaction behaviour
+        Iterates through the list of buyers in sequential activation order
+        buyer picks the seller promising lowest price and does transactions
+        until either transaction quota is depleted, or the emission allowance is satisfied.
+        Updates buyers and sellers price, and tracks the transactions.
+        Added functionality: checks if an Agent has possibility to drop their emission amount.
         """
-        pass
+        num_transaction = 0
+        num_emission_reduced = 0
+        for buyer in buyers:
+            deals_buyer = []
+            for seller in sellers:
+                i = 0
+                deals_seller = []
+
+                while self.check_transaction_condition3(buyer, seller):
+                    i += 1
+                    num_transaction = num_transaction + 1
+                    buyer.do_transaction()
+                    buyer.add_credits()
+                    seller.do_transaction()
+                    seller.decrease_credits()
+
+                    deals_buyer.append(seller.min_selling_price)
+                    deals_seller.append(seller.min_selling_price)
+                    if seller.pre_allocated_credits > seller.emissions_amount:
+                        pass
+                    elif seller.willingness_to_reduce >= 1:
+                        seller.reduce_emission()
+                        num_emission_reduced = num_emission_reduced + 1
+                seller.deals_sold[step] = seller.deals_sold[step] + deals_seller
+            buyer.deals_bought[step] = buyer.deals_bought[step] + deals_buyer
+
+        self.num_transaction_series.append(num_transaction)
+        self.num_reduce_emission_series.append(num_emission_reduced)
+        self.increase_incentives(step)
+
+        for agent in buyers:
+            agent.reset_quota()
+        for agent in sellers:
+            agent.reset_quota()
 
 
     def increase_incentives(self, step):
         """
-        This Function decreases the minimum price which I want to have and decreases the max price which I am willing to pay IF
-        I have not done any transaction in this period.
-
-        If I have done a transaction, then my prices are set back to my initial prices
+        If no transaction is made in the time step,
+        buyer increases the price it's willing to buy at,
+        and the seller decreases the price it's willing to sell at.
+        If a transaction is made, the prices are set back to my initial prices
         """
         for agent in self.agents:
             agent.update_buying_price(step)
             agent.update_selling_price(step)
 
     def add_emission(self, step):
+        """
+        For every step and for every agent, the current emissions amount and allowance credits are recorded.
+        whenever the "end of the month" is reached, the agents are given a fixed amount of credits.
+        Amount of emissions are increased for every time step based on how many agents there are in a group.
+        """
         for agent in self.agents:
             agent.emissions_series[step] = agent.emissions_amount
             agent.credit_series[step] = agent.pre_allocated_credits
 
-            agent.emissions_amount = self.randomize_emission_amount()
-            #company doesnt double it's emission per time step, which can be as low as a month or day
-            #credits are allocated by EU once
+            if (step % 31) == 0 and step > 1:
+                agent.pre_allocated_credits = agent.pre_allocated_credits + self.allowance_credits
+
+        agents_add_emissoin = random.sample(self.agents_no_emission_added, math.floor(self.number_of_agents/self.number_of_agents_group))
+        self.period = self.period + 1
+
+        for num in agents_add_emissoin:
+            self.agents[num].emissions_add(self.randomize_emission_amount())
+            self.agents_no_emission_added.remove(num)
+
+        if self.period == self.number_of_agents_group:
+            self.period = 0
+            self.agents_no_emission_added = [i for i in range(0, len(self.agents))]
 
     def averaging(self):
         """
-        method logic
-
+        Calculates averages between every step for:
+        emissions, credits, max buying price and min selling price
         """
         bought_average = []
         sold_average = []
@@ -218,12 +301,15 @@ class Environment:
         return bought_average, sold_average, emission_average, credit_average, max_price_average, min_price_average
 
     def statistics(self):
-
+        """
+        Draws the statistics
+        """
         average_price_bought, average_price_sold, average_emission, average_credits, average_max_buying_price, average_min_selling_price = self.averaging()
 
         plt.plot(self.num_transaction_series)
+        plt.plot(self.num_reduce_emission_series)
         plt.xlabel('steps')
-        plt.ylabel('Total umber Transactions')
+        plt.ylabel('Total umber Transactions and Number of Times Emission Reduced')
         plt.show()
         plt.plot(average_price_bought)
         plt.xlabel('steps')
@@ -265,12 +351,13 @@ class Environment:
                     self.do_transactions(sorted_b, sorted_s, step)
                 elif version == 2:
                     self.do_transactions2(sorted_b, sorted_s, step)
+                elif version == 3:
+                    self.do_transactions3(sorted_b, sorted_s, step)
             except Exception as e:
                 print(e)
 
             self.add_emission(step)
-            if (step % 30) == 0:
-                pass
+
         self.statistics()
 
 
