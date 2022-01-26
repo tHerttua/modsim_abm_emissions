@@ -8,9 +8,14 @@ import numpy as np
 #Control the amount of variance, could be made part of the environment for ease of use
 EMISSION_VARIANCE = 0.2
 PRICE_VARIANCE = 0.8
+ORIGINAL_PRICE = 60
 
 class Environment:
-    def __init__(self, number_of_agents_per_group, number_of_agents_group, allowance_credits, agent_transaction_limit, time_steps):
+    def __init__(self, number_of_agents_per_group,
+                 number_of_agents_group,
+                 allowance_credits,
+                 agent_transaction_limit,
+                 time_steps):
         self.number_of_agents = number_of_agents_per_group * number_of_agents_group
         self.number_of_agents_group = number_of_agents_group
         self.time_steps = time_steps
@@ -30,14 +35,14 @@ class Environment:
         Makes sure the inital maximum buying price is significantly lower than the initial minimum selling price
         """
         for _ in range(self.number_of_agents):
-            original_price = 60
+            original_price = ORIGINAL_PRICE
             emissions_amount = 0
             buying_price = self.randomize_prices(original_price-20)
             selling_price = self.randomize_prices(original_price+20)
             allocated_credits = self.allowance_credits
             time_steps = self.time_steps
             new_agent = Agent(emissions_amount,
-                              allocated_credits/2,
+                              allocated_credits,
                               self.agent_transaction_limit,
                               buying_price,
                               selling_price,
