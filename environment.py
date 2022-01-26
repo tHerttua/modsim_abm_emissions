@@ -24,8 +24,8 @@ class Environment:
         for _ in range(self.number_of_agents):
             original_price = 60
             emissions_amount = self.randomize_emission_amount()
-            buying_price = self.randomize_prices(original_price)#the max price I would pay must be lower as the price <- already picked from random pool
-            selling_price = self.randomize_prices(original_price)# I would sell a certificate, vice versa, the agent would be stupid
+            buying_price = self.randomize_prices(original_price - 10 )#the max price I would pay must be lower as the price <- already picked from random pool
+            selling_price = self.randomize_prices(original_price + 10 )# I would sell a certificate, vice versa, the agent would be stupid
             allocated_credits = self.allowance_credits #later it is going to be added <- introduced a bug, need to be allocated
             time_steps = self.time_steps
             new_agent = Agent(emissions_amount, allocated_credits, self.agent_transaction_limit, buying_price, selling_price, time_steps)
