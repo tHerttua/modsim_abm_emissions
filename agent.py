@@ -56,7 +56,7 @@ class Agent:
         if len(self.deals_sold[step]) != 0:
             self.min_selling_price = self.min_selling_price_init
         else:
-            self.min_selling_price = max(self.min_selling_price_init * 0.7, self.min_selling_price - abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
+            self.min_selling_price = max(self.max_buying_price, self.min_selling_price - abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
 
     def update_buying_price(self, step):
         """
@@ -67,7 +67,7 @@ class Agent:
         if len(self.deals_bought[step]) != 0:
             self.max_buying_price = self.max_buying_price_init
         else:
-            self.max_buying_price = min(self. max_buying_price_init * 1.3, self.max_buying_price + abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
+            self.max_buying_price = min(self.min_selling_price, self.max_buying_price + abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
 
     def emissions_add(self, add):
         self.emissions_amount = self.emissions_amount + add
@@ -75,14 +75,14 @@ class Agent:
 
     def update_emission_ever_had(self, add):
         self.emission_ever_had = self.emission_ever_had + add
-        self.update_potential_reduce()
+        self.updata_potential_reduce()
 
-    def update_potential_reduce(self):
+    def updata_potential_reduce(self):
         self.willingness_to_reduce = floor(self.emission_ever_had * REDUCE_RATE) - self.emission_have_reduced
 
     def reduce_emission(self):
         self.emissions_amount = self.emissions_amount - 1
         self.emission_have_reduced = self.emission_have_reduced + 1
-        self.update_potential_reduce()
+        self.updata_potential_reduce()
 
 

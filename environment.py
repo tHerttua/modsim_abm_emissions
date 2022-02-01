@@ -4,10 +4,12 @@ from agent import Agent
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from itertools import permutations
 
 #Control the amount of variance, could be made part of the environment for ease of use
 EMISSION_VARIANCE = 0.2
 PRICE_VARIANCE = 0.8
+WILLINGNESS_GAP = 10
 ORIGINAL_PRICE = 60
 
 class Environment:
@@ -15,7 +17,8 @@ class Environment:
                  number_of_agents_group,
                  allowance_credits,
                  agent_transaction_limit,
-                 time_steps):
+                 time_steps,
+                 iterate):
         self.number_of_agents = number_of_agents_per_group * number_of_agents_group
         self.number_of_agents_group = number_of_agents_group
         self.time_steps = time_steps
@@ -27,7 +30,9 @@ class Environment:
         self.num_transaction_series = []
         self.num_reduce_emission_series = []
         self.agents_no_emission_added = [i for i in range(0, self.number_of_agents)]
+        self.number_of_agents_per_group = number_of_agents_per_group
         self.period = 0
+        self.iterate = iterate
 
     def create_agents(self):
         """
@@ -37,25 +42,18 @@ class Environment:
         for _ in range(self.number_of_agents):
             original_price = ORIGINAL_PRICE
             emissions_amount = 0
-            buying_price = self.randomize_prices(original_price-20)
-            selling_price = self.randomize_prices(original_price+20)
-            allocated_credits = self.allowance_credits
+            buying_price = self.randomize_prices(original_price-20)#the max price I would pay must be lower as the price <- already picked from random pool
+            selling_price = self.randomize_prices(original_price+20)# I would sell a certificate, vice versa, the agent would be stupid
+            allocated_credits = self.allowance_credits #later it is going to be added <- introduced a bug, need to be allocated
             time_steps = self.time_steps
-            new_agent = Agent(emissions_amount,
-                              allocated_credits,
-                              self.agent_transaction_limit,
-                              buying_price,
-                              selling_price,
-                              time_steps,
-                              original_price)
-
+            new_agent = Agent(emissions_amount, allocated_credits, self.agent_transaction_limit, buying_price, selling_price, time_steps, original_price)
             self.agents.append(new_agent)
 
     def randomize_emission_amount(self):
         """
         The total allowance credits are divided per month because they are increased daily
         """
-        all_cr = self.allowance_credits /31*self.number_of_agents_group
+        all_cr = self.allowance_credits /31*self.number_of_agents_group #DIvided here by 30 because every day this gets added to the emissions
 
         min_emission = int(math.floor(all_cr -all_cr * EMISSION_VARIANCE))
         max_emission = int(math.floor(all_cr + all_cr * EMISSION_VARIANCE))
@@ -70,6 +68,17 @@ class Environment:
 
         return random_price
 
+    def check_seller(self, agent):#this i have to change !!! cause with too many emissions every one is a seller !!!!
+        """
+        check if an agent wants to sell
+
+        """
+        if agent.pre_allocated_credits > agent.emissions_amount: #or (abs(agent.pre_allocated_credits - agent.emissions_amount)  < willingness_gap and agent.willingness_to_reduce>=1):
+            return True
+        else:
+            False
+
+
     def list_buyers_sellers_satisfied(self):
         """
         Based on the amount of allowances versus emissions,
@@ -80,8 +89,8 @@ class Environment:
         sellers = []
         satisfied = []
         for agent in self.agents:
-            if agent.pre_allocated_credits> agent.emissions_amount:
-                sellers.append(agent)
+            if self.check_seller(agent):#the assumption is that a agent just wants to sell if he has initially more credits than emission
+                sellers.append(agent)#at the transaction function he can make addionaly credits free by reducing emissions
             elif agent.pre_allocated_credits < agent.emissions_amount:
                 buyers.append(agent)
             else:
@@ -91,8 +100,8 @@ class Environment:
 
     def sort_buyers_sellers(self, buyers, sellers):
         """
-        Sorts buyers by their maximum buying price
-        and sellers by their minimum selling price.
+        Sorts buyertras by their maximum buying price
+        and sellers by their minimum selling price reversed.
         """
         buyers.sort(key=lambda x: x.max_buying_price, reverse=False)
         sellers.sort(key=lambda x: x.min_selling_price, reverse=True)
@@ -104,8 +113,7 @@ class Environment:
         Basic skeleton
         """
         if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
-            if buyer.pre_allocated_credits < buyer.emissions_amount and \
-                    seller.pre_allocated_credits > seller.emissions_amount:
+            if buyer.pre_allocated_credits < buyer.emissions_amount and seller.pre_allocated_credits > seller.emissions_amount:
                 if buyer.max_buying_price > seller.min_selling_price:
                     return True
         return False
@@ -119,8 +127,7 @@ class Environment:
         Last, if the buying price is higher than selling price, the transaction can be made
         """
         if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
-            if buyer.pre_allocated_credits < buyer.emissions_amount and \
-                    (seller.pre_allocated_credits > seller.emissions_amount or seller.willingness_to_reduce >= 1):
+            if buyer.pre_allocated_credits < buyer.emissions_amount and (seller.pre_allocated_credits > seller.emissions_amount or seller.willingness_to_reduce >= 1):
                 if buyer.max_buying_price > seller.min_selling_price:
                     return True
         return False
@@ -160,7 +167,8 @@ class Environment:
 
                 while self.check_transaction_condition(buyer, seller):
                     i += 1
-                    num_transaction = num_transaction + 1
+                    num_transaction = num_transaction + 1#there was a mistake !!!
+                    #print("transaction #" + str(i))
                     buyer.do_transaction()
                     buyer.add_credits()
                     seller.do_transaction()
@@ -187,6 +195,7 @@ class Environment:
         Updates buyers and sellers price, and tracks the transactions.
         Added functionality: checks if an Agent has possibility to drop their emission amount.
         """
+
         num_transaction = 0
         num_emission_reduced = 0
         for buyer in buyers:
@@ -198,19 +207,20 @@ class Environment:
                 while self.check_transaction_condition3(buyer, seller):
                     i += 1
                     num_transaction = num_transaction + 1
+                    #print("transaction #" + str(i))
                     buyer.do_transaction()
                     buyer.add_credits()
                     seller.do_transaction()
                     seller.decrease_credits()
 
-                    deals_buyer.append(seller.min_selling_price)
+                    deals_buyer.append(seller.min_selling_price)#they agreed to the same price
                     deals_seller.append(seller.min_selling_price)
                     if seller.pre_allocated_credits > seller.emissions_amount:
                         pass
                     elif seller.willingness_to_reduce >= 1:
                         seller.reduce_emission()
                         num_emission_reduced = num_emission_reduced + 1
-                seller.deals_sold[step] = seller.deals_sold[step] + deals_seller
+                seller.deals_sold[step] = seller.deals_sold[step] + deals_seller#collecting data
             buyer.deals_bought[step] = buyer.deals_bought[step] + deals_buyer
 
         self.num_transaction_series.append(num_transaction)
@@ -228,7 +238,7 @@ class Environment:
         If no transaction is made in the time step,
         buyer increases the price it's willing to buy at,
         and the seller decreases the price it's willing to sell at.
-        If a transaction is made, the prices are set back to my initial prices
+        If a transaction is made, the prices are set back to initial prices
         """
         for agent in self.agents:
             agent.update_buying_price(step)
@@ -247,18 +257,12 @@ class Environment:
             if (step % 31) == 0 and step > 1:
                 agent.pre_allocated_credits = agent.pre_allocated_credits + self.allowance_credits
 
-        agent.emissions_add(self.randomize_emission_amount()/5)
 
-        agents_add_emissoin = random.sample(self.agents_no_emission_added, math.floor(self.number_of_agents/self.number_of_agents_group))
-        self.period = self.period + 1
-
-        for num in agents_add_emissoin:
+        for num in range(self.period * self.number_of_agents_per_group, (self.period + 1)* self.number_of_agents_per_group -1):
             self.agents[num].emissions_add(self.randomize_emission_amount())
-            self.agents_no_emission_added.remove(num)
-
+        self.period = self.period + 1
         if self.period == self.number_of_agents_group:
             self.period = 0
-            self.agents_no_emission_added = [i for i in range(0, len(self.agents))]
 
     def averaging(self):
         """
@@ -307,35 +311,83 @@ class Environment:
 
         return bought_average, sold_average, emission_average, credit_average, max_price_average, min_price_average
 
+    def plot_agents(self):
+        """
+        """
+        Nlines = 3
+
+        rand_list = random.sample(range(len(self.agents)), Nlines)
+        j = 0
+        for i in rand_list:
+            if j == 0:
+                plt.plot(self.agents[i].emissions_series, '-', color=plt.cm.RdYlBu(np.linspace(0, 1, Nlines)[j]),
+                         label="Emissions")
+                plt.plot(self.agents[i].credit_series, '--', color=plt.cm.RdYlBu(np.linspace(0, 1, Nlines)[j]),
+                         label="Credits")
+                plt.legend()
+
+            else:
+                plt.plot(self.agents[i].emissions_series,  '-',color=plt.cm.RdYlBu(np.linspace(0,1, Nlines)[j]))
+                plt.plot(self.agents[i].credit_series, '--', color=plt.cm.RdYlBu(np.linspace(0,1, Nlines)[j]))
+
+
+            j = j + 1
+
+        plt.xlabel('Steps')
+        plt.ylabel('Emmissions and Credits')
+        plt.savefig("pics/"+str(self.iterate)+"agents.png")
+        #plt.show()
+        plt.clf()
+
+
+
+
     def statistics(self):
         """
         Draws the statistics
         """
+
         average_price_bought, average_price_sold, average_emission, average_credits, average_max_buying_price, average_min_selling_price = self.averaging()
 
-        plt.plot(self.num_transaction_series)
-        plt.plot(self.num_reduce_emission_series)
-        plt.xlabel('steps')
-        plt.ylabel('Total umber Transactions and Number of Times Emission Reduced')
-        plt.show()
+        plt.plot(self.num_transaction_series, label ="Total Number of Transactions")
+        plt.plot(self.num_reduce_emission_series, label ="Transactions because of Emissions Reduced")
+        plt.legend()
+        plt.xlabel('Steps')
+        plt.ylabel('Number of Transactions')
+        plt.savefig("pics/"+str(self.iterate)+ "agentss.png")
+        #plt.show()
+        plt.clf()
+
         plt.plot(average_price_bought)
-        plt.xlabel('steps')
-        plt.ylabel('Average prices bought')
-        plt.show()
-        plt.plot(average_price_sold)
-        plt.xlabel('steps')
-        plt.ylabel('Average prices sold')
-        plt.show()
-        plt.plot(average_emission)
-        plt.plot(average_credits)
+        plt.xlabel('Steps')
+        plt.ylabel('Average Prices Paid')
+        plt.savefig("pics/"+str(self.iterate)+"agents3.png")
+        #plt.show()
+        plt.clf()
+
+        #plt.plot(average_price_sold)
+        #plt.xlabel('steps')
+        #plt.ylabel('Average prices sold')
+        #plt.show()
+        plt.clf()
+
+        plt.plot(average_emission, label ="Average amount of Emissions")
+        plt.plot(average_credits, label ="Average amount of Credits")
+        plt.legend()
         plt.xlabel('days')
-        plt.ylabel('Average emission and credits')
-        plt.show()
-        plt.plot(average_min_selling_price)
-        plt.plot(average_max_buying_price)
-        plt.xlabel('days')
-        plt.ylabel('Average max price for buying & average min price for selling')
-        plt.show()
+        plt.ylabel('Emissions and Credits')
+        plt.savefig("pics/"+str(self.iterate) +"agents4.png")
+        #plt.show()
+        plt.clf()
+
+        plt.plot(average_min_selling_price, label ="Average Minimal Selling Price")
+        plt.plot(average_max_buying_price, label ="Average Maximal Buying Price")
+        plt.legend()
+        plt.xlabel('Step')
+        plt.ylabel('Average Price')
+        plt.savefig("pics/"+str(self.iterate) +"agents6.png")
+        #plt.show()
+        plt.clf()
 
     def do_magic(self, version=1):
         """
@@ -366,6 +418,8 @@ class Environment:
             self.add_emission(step)
 
         self.statistics()
+
+        self.plot_agents()
 
 
 
