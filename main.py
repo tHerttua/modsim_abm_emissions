@@ -9,9 +9,9 @@ from environment import Environment
 """
 
 if __name__ == '__main__':
-    env = Environment(number_of_agents_per_group=3,
-                      number_of_agents_group=365,
-                      allowance_credits=320,
+    env = Environment(number_of_agents_per_group=100,
+                      number_of_agents_group=10,
+                      allowance_credits=160,
                       agent_transaction_limit=3,
                       time_steps=365)
     env.create_agents()

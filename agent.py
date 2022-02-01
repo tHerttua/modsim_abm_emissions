@@ -75,14 +75,14 @@ class Agent:
 
     def update_emission_ever_had(self, add):
         self.emission_ever_had = self.emission_ever_had + add
-        self.updata_potential_reduce()
+        self.update_potential_reduce()
 
-    def updata_potential_reduce(self):
+    def update_potential_reduce(self):
         self.willingness_to_reduce = floor(self.emission_ever_had * REDUCE_RATE) - self.emission_have_reduced
 
     def reduce_emission(self):
         self.emissions_amount = self.emissions_amount - 1
         self.emission_have_reduced = self.emission_have_reduced + 1
-        self.updata_potential_reduce()
+        self.update_potential_reduce()
 
 
