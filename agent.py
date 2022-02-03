@@ -22,8 +22,8 @@ class Agent:
         self.min_selling_price = min_selling_price
         self.min_selling_price_init = min_selling_price
         self.original_price = original_price
-        self.daily_quota = daily_quota
-        self.group_number = group # agents know which group they belong to 
+        self.daily_quota = daily_quota # the transaction limit per time step
+        self.group_number = group # agents know which group they belong to
         self.number_transaction_left = self.daily_quota
         self.willingness_to_reduce = emissions_amount * REDUCE_RATE
         self.emission_ever_had = emissions_amount # Total amount of emissions since the start
