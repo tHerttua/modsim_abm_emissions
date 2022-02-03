@@ -12,7 +12,8 @@ class Agent:
                  max_buying_price=0,
                  min_selling_price=0,
                  time_steps=0,
-                 original_price=0):
+                 original_price=0,
+                 group=0):
 
         self.emissions_amount = emissions_amount
         self.pre_allocated_credits = pre_allocated_credits
@@ -22,6 +23,7 @@ class Agent:
         self.min_selling_price_init = min_selling_price
         self.original_price = original_price
         self.daily_quota = daily_quota
+        self.group_number = group
         self.number_transaction_left = self.daily_quota
         self.willingness_to_reduce = emissions_amount * REDUCE_RATE
         self.emission_ever_had = emissions_amount # Total amount of emissions since the start
