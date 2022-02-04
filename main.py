@@ -1,8 +1,8 @@
 from environment import Environment
-
-
+import matplotlib.pyplot as plt
+import numpy as np
 """
-200 companies split between 10 groups
+200 companies split between 10 groups (every 10th percentile)
 Groups have the following emissions averages,
 and they're used as a proxy for the initial credits.
 (Subject to having divisor of 32)
@@ -41,14 +41,49 @@ if __name__ == '__main__':
         30528
     ]
 
-    i = 1
+    i = 0
+    runs = 5
+    result_pr =[]
+    result_em = []
+    for i in range(runs):
 
-    env = Environment(number_of_agents_per_group=20,
-                      number_of_agents_group=10,
-                      allowance_credits=allowances,#has to have divisor 32
-                      agent_transaction_limit=20,
-                      time_steps=365,
-                      iterate=i) #??
-    env.create_agents()
-    env.do_magic(version=3)
+        env = Environment(number_of_agents_per_group=20,
+                          number_of_agents_group=10,
+                          allowance_credits=allowances,
+                          agent_transaction_limit=(1 + i * 10 ),
+                          time_steps=365,
+                          iterate=i)
+        env.create_agents()
+        result = env.do_magic(version=3)
+        result_pr.append(result[0])
+        result_em.append(result[1])
+        i = i + 1
+
+    for i in range(len(result_pr)):
+
+        plt.plot(result_pr[i], '-', color=plt.cm.RdYlBu(np.linspace(0, 1, runs)[i]),
+                         label="limit" + str(i*10 +1) + "Price")
+        plt.legend()
+
+    plt.xlabel('Steps')
+    plt.ylabel('Price paid different runs')
+    plt.savefig("pics/"+"limitPrice.png")
+    #plt.show()s
+    plt.clf()
+
+    for i in range(len(result_em)):
+
+        plt.plot(result_em[i], '-', color=plt.cm.RdYlBu(np.linspace(0, 1, runs)[i]),
+                         label="limit" + str(i*10 +1) + "Emission")
+        plt.legend()
+
+    plt.xlabel('Steps')
+    plt.ylabel('Emissions average different runs')
+    plt.savefig("pics/"+"limitEmission.png")
+    #plt.show()s
+    plt.clf()
+
+
+
+
 

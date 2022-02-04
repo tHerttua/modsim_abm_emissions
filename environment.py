@@ -53,7 +53,6 @@ class Environment:
                 buying_price = self.randomize_prices(original_price - PRICE_CONTROL_VALUE)
                 selling_price = self.randomize_prices(original_price + PRICE_CONTROL_VALUE)
                 allocated_credits = self.allowance_credits[group_number]
-
                 new_agent = Agent(emissions_amount,
                                   allocated_credits,
                                   self.agent_transaction_limit,
@@ -70,9 +69,9 @@ class Environment:
 
         The total allowance credits are divided per month because they are increased daily
         """
-        all_cr = agent.pre_allocated_credits /31 * self.number_of_agents_group #DIvided here by 30 because every day this gets added to the emissions
+        all_cr = agent.pre_allocated_credits_init /CREDITS_ALLOCATION_INTERVAL * self.number_of_agents_group
 
-        min_emission = int(math.floor(all_cr -all_cr * EMISSION_VARIANCE))
+        min_emission = int(math.floor(all_cr - all_cr * EMISSION_VARIANCE))
         max_emission = int(math.floor(all_cr + all_cr * EMISSION_VARIANCE))
         emission_amount = random.randint(min_emission, max_emission)
 
@@ -114,6 +113,22 @@ class Environment:
                 satisfied.append(agent)
 
         return buyers, sellers, satisfied
+
+    def list_buyers_sellers_satisfied2(self):
+        who_buyer = random.sample(range(len(self.agents)), int(math.floor(len(self.agents)/2)))
+        buyers = []
+        sellers = []
+        satisfied = []
+        j = 1
+
+        for agent in self.agents:
+            if (j in who_buyer):
+                buyers.append(agent)
+            else:
+                sellers.append(agent)
+            j = j + 1
+        return buyers, sellers, satisfied
+
 
     def sort_buyers_sellers(self, buyers, sellers):
         """
@@ -267,7 +282,7 @@ class Environment:
         """
         if (step % CREDITS_ALLOCATION_INTERVAL) == 0 and step > 1:
             for agent in self.agents:
-                agent.pre_allocated_credits = agent.pre_allocated_credits + self.allowance_credits[agent.group_number]
+                agent.pre_allocated_credits = agent.pre_allocated_credits + agent.pre_allocated_credits_init
 
     def add_emission(self, step):
         """
@@ -281,8 +296,8 @@ class Environment:
 
         for num in range(self.period * self.number_of_agents_per_group,
                          (self.period + 1) * self.number_of_agents_per_group -1):
-            current_agent = self.agents[num]
-            current_agent.emissions_add(self.randomize_emission_amount(current_agent)) # takes an  agent as an argument
+
+            self.agents[num].emissions_add(self.randomize_emission_amount(self.agents[num])) # takes an  agent as an argument
         self.period = self.period + 1
         if self.period == self.number_of_agents_group:
             self.period = 0
@@ -412,6 +427,8 @@ class Environment:
         #plt.show()
         plt.clf()
 
+        return average_price_sold, average_emission
+
     def do_magic(self, version=1):
         """
             • Buyers list sorted by max price
@@ -425,7 +442,7 @@ class Environment:
         """
 
         for step in range(self.time_steps):
-            buyers, sellers, satisfied = self.list_buyers_sellers_satisfied()
+            buyers, sellers, satisfied = self.list_buyers_sellers_satisfied2()
             sorted_b, sorted_s = self.sort_buyers_sellers(buyers, sellers)
 
             try:
@@ -441,9 +458,11 @@ class Environment:
             self.add_emission(step)
             self.add_credits(step)
 
-        self.statistics()
+        return_pr, average_em = self.statistics()
 
         self.plot_agents()
+
+        return [return_pr,average_em]
 
 
 

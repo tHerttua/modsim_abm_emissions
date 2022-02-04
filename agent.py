@@ -16,7 +16,8 @@ class Agent:
                  group=0):
 
         self.emissions_amount = emissions_amount
-        self.pre_allocated_credits = pre_allocated_credits
+        self.pre_allocated_credits = pre_allocated_credits/3 #start with a third of the credits saved from last year!
+        self.pre_allocated_credits_init = pre_allocated_credits
         self.max_buying_price = max_buying_price
         self.max_buying_price_init = max_buying_price
         self.min_selling_price = min_selling_price
@@ -56,7 +57,7 @@ class Agent:
         """
         self.min_selling_price_series[step] = self.min_selling_price
         if len(self.deals_sold[step]) != 0:
-            self.min_selling_price = self.min_selling_price_init
+            self.min_selling_price = max(self.max_buying_price, self.min_selling_price + abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
         else:
             self.min_selling_price = max(self.max_buying_price, self.min_selling_price - abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
 
@@ -67,7 +68,7 @@ class Agent:
         """
         self.max_buying_price_series[step] = self.max_buying_price
         if len(self.deals_bought[step]) != 0:
-            self.max_buying_price = self.max_buying_price_init
+            self.max_buying_price = min(self.min_selling_price, self.max_buying_price - abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
         else:
             self.max_buying_price = min(self.min_selling_price, self.max_buying_price + abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
 
