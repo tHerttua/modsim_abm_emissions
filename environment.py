@@ -1,7 +1,6 @@
 import random
 import math
 from agent import Agent
-import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from itertools import permutations
@@ -13,6 +12,7 @@ WILLINGNESS_GAP = 10
 ORIGINAL_PRICE = 60
 PRICE_CONTROL_VALUE = 20
 CREDITS_ALLOCATION_INTERVAL = 32
+certificate_reductionrate = 0.97
 
 
 class Environment:
@@ -37,6 +37,7 @@ class Environment:
         self.period = 0
         self.iterate = iterate
         self.day_of_the_month = 0
+
 
     def create_agents(self):
         """
@@ -70,7 +71,7 @@ class Environment:
 
         The total allowance credits are divided per month because they are increased daily
         """
-        all_cr = agent.pre_allocated_credits_init /CREDITS_ALLOCATION_INTERVAL
+        all_cr = agent.pre_allocated_credits_init/CREDITS_ALLOCATION_INTERVAL
 
         min_emission = int(math.floor(all_cr - all_cr * EMISSION_VARIANCE))
         max_emission = int(math.floor(all_cr + all_cr * EMISSION_VARIANCE))
@@ -273,17 +274,71 @@ class Environment:
                     elif seller.willingness_to_reduce >= 1:
                         seller.reduce_emission()
                         num_emission_reduced = num_emission_reduced + 1
-                seller.deals_sold[step] = seller.deals_sold[step] + deals_seller#collecting data
+                seller.deals_sold[step] = seller.deals_sold[step] + deals_seller #collecting data
             buyer.deals_bought[step] = buyer.deals_bought[step] + deals_buyer
 
         self.num_transaction_series.append(num_transaction)
         self.num_reduce_emission_series.append(num_emission_reduced)
-        self.increase_incentives(step)
+      #  self.increase_incentives(step)
+        for agent in self.agents:
+            agent.record_price(step)
 
         for agent in buyers:
+            agent.update_buying_price1(step)
             agent.reset_quota()
         for agent in sellers:
+            agent.update_selling_price1(step)
             agent.reset_quota()
+
+
+    def do_transactions4(self, buyers, sellers, step):
+        """
+        Iterates through the list of buyers in sequential activation order
+        buyer picks the seller promising lowest price and does transactions
+        until either transaction quota is depleted, or the emission allowance is satisfied.
+        Updates buyers and sellers price, and tracks the transactions.
+        Added functionality: checks if an Agent has possibility to drop their emission amount.
+        """
+
+        num_transaction = 0
+        num_emission_reduced = 0
+        for buyer in buyers:
+            deals_buyer = []
+            for seller in sellers:
+                i = 0
+                deals_seller = []
+
+                while self.check_transaction_condition3(buyer, seller):
+                    i += 1
+                    num_transaction = num_transaction + 1
+                    buyer.do_transaction()
+                    buyer.add_credits()
+                    seller.do_transaction()
+                    seller.decrease_credits()
+
+                    deals_buyer.append((seller.min_selling_price + buyer.max_buying_price)/2) #they agreed to the same price
+                    deals_seller.append((seller.min_selling_price + buyer.max_buying_price)/2)
+                    '''                    if self.check_seller(seller):
+                        pass
+                    elif seller.willingness_to_reduce >= 1:
+                        seller.reduce_emission()
+                        num_emission_reduced = num_emission_reduced + 1'''
+                seller.deals_sold[step] = seller.deals_sold[step] + deals_seller #collecting data
+            buyer.deals_bought[step] = buyer.deals_bought[step] + deals_buyer
+
+        self.num_transaction_series.append(num_transaction)
+        self.num_reduce_emission_series.append(num_emission_reduced)
+     #   self.increase_incentives(step)
+        for agent in self.agents:
+            agent.record_price(step)
+
+        for agent in buyers:
+            agent.update_buying_price2(step)
+            agent.reset_quota()
+        for agent in sellers:
+            agent.update_selling_price2(step)
+            agent.reset_quota()
+
 
     def increase_incentives(self, step):
         """
@@ -302,7 +357,7 @@ class Environment:
         """
         if (step % CREDITS_ALLOCATION_INTERVAL) == 0:
             for agent in self.agents:
-                agent.pre_allocated_credits = agent.pre_allocated_credits + agent.pre_allocated_credits_init
+                agent.pre_allocated_credits = agent.pre_allocated_credits + agent.pre_allocated_credits_init * certificate_reductionrate
 
     def add_emission(self, step):
         """
@@ -486,6 +541,9 @@ class Environment:
                     self.do_transactions2(sorted_b, sorted_s, step)
                 elif version == 3:
                     self.do_transactions3(sorted_b, sorted_s, step)
+                elif version == 4:
+                    self.do_transactions4(sorted_b, sorted_s, step)
+
             except Exception as e:
                 print(e)
 
