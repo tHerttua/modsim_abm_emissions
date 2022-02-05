@@ -11,12 +11,12 @@ class Agent:
                  daily_quota=1,
                  max_buying_price=0,
                  min_selling_price=0,
-                 time_steps=0,
+                 time_steps = 360,
                  original_price=0,
                  group=0):
 
         self.emissions_amount = emissions_amount
-        self.pre_allocated_credits = pre_allocated_credits/3 #start with a third of the credits saved from last year!
+        self.pre_allocated_credits = - pre_allocated_credits/2
         self.pre_allocated_credits_init = pre_allocated_credits
         self.max_buying_price = max_buying_price
         self.max_buying_price_init = max_buying_price
@@ -29,6 +29,7 @@ class Agent:
         self.willingness_to_reduce = emissions_amount * REDUCE_RATE
         self.emission_ever_had = emissions_amount # Total amount of emissions since the start
         self.emission_have_reduced = 0 # Number of times emissions have reduced
+
 
         # Progress tracking
         self.deals_bought = [[]] * time_steps
@@ -59,8 +60,8 @@ class Agent:
         if len(self.deals_sold[step]) != 0:
             self.min_selling_price = max(self.max_buying_price, self.min_selling_price + abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
         else:
-            self.min_selling_price = max(self.max_buying_price, self.min_selling_price - abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
-
+            self.min_selling_price = max(self.min_selling_price_init * 0.7, self.min_selling_price - abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
+# Change number 0.7 to parameter "update_rate"
     def update_buying_price(self, step):
         """
         The buying price is updated if the current step doesn't have record of a transaction.
@@ -70,7 +71,8 @@ class Agent:
         if len(self.deals_bought[step]) != 0:
             self.max_buying_price = min(self.min_selling_price, self.max_buying_price - abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
         else:
-            self.max_buying_price = min(self.min_selling_price, self.max_buying_price + abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
+            self.max_buying_price = min(self. max_buying_price_init * 1.3, self.max_buying_price + abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
+# same issue as above: Change number 1.3 to a parameter
 
     def emissions_add(self, add):
         self.emissions_amount = self.emissions_amount + add
