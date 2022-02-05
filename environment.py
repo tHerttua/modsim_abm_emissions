@@ -7,12 +7,12 @@ import numpy as np
 from itertools import permutations
 
 #Control the amount of variance, could be made part of the environment for ease of use
-EMISSION_VARIANCE = 0.2
+EMISSION_VARIANCE = 0.9
 PRICE_VARIANCE = 0.8
 WILLINGNESS_GAP = 10
 ORIGINAL_PRICE = 60
 PRICE_CONTROL_VALUE = 20
-CREDITS_ALLOCATION_INTERVAL = 31
+CREDITS_ALLOCATION_INTERVAL = 32
 
 
 class Environment:
@@ -36,6 +36,7 @@ class Environment:
         self.number_of_agents_per_group = number_of_agents_per_group
         self.period = 0
         self.iterate = iterate
+        self.day_of_the_month = 0
 
     def create_agents(self):
         """
@@ -69,7 +70,7 @@ class Environment:
 
         The total allowance credits are divided per month because they are increased daily
         """
-        all_cr = agent.pre_allocated_credits_init /CREDITS_ALLOCATION_INTERVAL * self.number_of_agents_group
+        all_cr = agent.pre_allocated_credits_init /CREDITS_ALLOCATION_INTERVAL
 
         min_emission = int(math.floor(all_cr - all_cr * EMISSION_VARIANCE))
         max_emission = int(math.floor(all_cr + all_cr * EMISSION_VARIANCE))
@@ -84,16 +85,32 @@ class Environment:
 
         return random_price
 
-    def check_seller(self, agent):#this i have to change !!! cause with too many emissions every one is a seller !!!!
+    def check_seller(self, agent):  #this i have to change !!! cause with too many emissions every one is a seller !!!!
         """
         check if an agent wants to sell
+        it compares the total emission amount until now with the total number of credits minus the expected needed credits
 
         """
-        if agent.pre_allocated_credits > agent.emissions_amount: #or (abs(agent.pre_allocated_credits - agent.emissions_amount)  < willingness_gap and agent.willingness_to_reduce>=1):
+        k = agent.pre_allocated_credits_init * (CREDITS_ALLOCATION_INTERVAL-self.day_of_the_month+1)/ CREDITS_ALLOCATION_INTERVAL         #calculates the portion which will be expected to be needed in the future
+
+        if agent.pre_allocated_credits - k > agent.emissions_amount: #or (abs(agent.pre_allocated_credits - agent.emissions_amount)  < willingness_gap and agent.willingness_to_reduce>=1):
             return True
         else:
-            False
+            return False
 
+    def check_buyer(self, agent):
+
+        '''
+        checks if an agent wants to buy
+        inverted functionality as check_seller
+        '''
+
+        k = agent.pre_allocated_credits_init * (CREDITS_ALLOCATION_INTERVAL - self.day_of_the_month +1) / CREDITS_ALLOCATION_INTERVAL  # calculates the number of certificates which will be expected to be needed in the future
+
+        if agent.pre_allocated_credits - k < agent.emissions_amount:  # or (abs(agent.pre_allocated_credits - agent.emissions_amount)  < willingness_gap and agent.willingness_to_reduce>=1):
+            return True
+        else:
+            return False
 
     def list_buyers_sellers_satisfied(self):
         """
@@ -105,9 +122,9 @@ class Environment:
         sellers = []
         satisfied = []
         for agent in self.agents:
-            if self.check_seller(agent):#the assumption is that a agent just wants to sell if he has initially more credits than emission
-                sellers.append(agent)#at the transaction function he can make addionaly credits free by reducing emissions
-            elif agent.pre_allocated_credits < agent.emissions_amount:
+            if self.check_seller(agent): #the assumption is that a agent just wants to sell if he has initially more credits than emission
+                sellers.append(agent)    #at the transaction function he can make addionaly credits free by reducing emissions
+            elif self.check_buyer(agent):
                 buyers.append(agent)
             else:
                 satisfied.append(agent)
@@ -115,6 +132,9 @@ class Environment:
         return buyers, sellers, satisfied
 
     def list_buyers_sellers_satisfied2(self):
+        # Version 2: divides Buyers/sellers randomly.
+        # Correct? @sebi
+
         who_buyer = random.sample(range(len(self.agents)), int(math.floor(len(self.agents)/2)))
         buyers = []
         sellers = []
@@ -146,7 +166,7 @@ class Environment:
         Basic skeleton
         """
         if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
-            if buyer.pre_allocated_credits < buyer.emissions_amount and seller.pre_allocated_credits > seller.emissions_amount:
+            if self.check_buyer(buyer) and self.check_seller(seller):
                 if buyer.max_buying_price > seller.min_selling_price:
                     return True
         return False
@@ -160,8 +180,8 @@ class Environment:
         Last, if the buying price is higher than selling price, the transaction can be made
         """
         if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
-            if buyer.pre_allocated_credits < buyer.emissions_amount and \
-                    (seller.pre_allocated_credits > seller.emissions_amount or seller.willingness_to_reduce >= 1):
+            if self.check_buyer(buyer)  and \
+                    (self.check_seller(seller) or seller.willingness_to_reduce >= 1):
                 if buyer.max_buying_price > seller.min_selling_price:
                     return True
         return False
@@ -246,9 +266,9 @@ class Environment:
                     seller.do_transaction()
                     seller.decrease_credits()
 
-                    deals_buyer.append(seller.min_selling_price)#they agreed to the same price
-                    deals_seller.append(seller.min_selling_price)
-                    if seller.pre_allocated_credits > seller.emissions_amount:
+                    deals_buyer.append((seller.min_selling_price + buyer.max_buying_price)/2) #they agreed to the same price
+                    deals_seller.append((seller.min_selling_price + buyer.max_buying_price)/2)
+                    if self.check_seller(seller):
                         pass
                     elif seller.willingness_to_reduce >= 1:
                         seller.reduce_emission()
@@ -280,7 +300,7 @@ class Environment:
         """
         When the current step matches the allocation interval,
         """
-        if (step % CREDITS_ALLOCATION_INTERVAL) == 0 and step > 1:
+        if (step % CREDITS_ALLOCATION_INTERVAL) == 0:
             for agent in self.agents:
                 agent.pre_allocated_credits = agent.pre_allocated_credits + agent.pre_allocated_credits_init
 
@@ -294,6 +314,12 @@ class Environment:
             agent.emissions_series[step] = agent.emissions_amount
             agent.credit_series[step] = agent.pre_allocated_credits
 
+            agent.emissions_add(self.randomize_emission_amount(agent))      #new Version: daily emissions
+
+        '''
+        # Old Version
+        # emission allocation by groups
+        
         for num in range(self.period * self.number_of_agents_per_group,
                          (self.period + 1) * self.number_of_agents_per_group -1):
 
@@ -301,6 +327,7 @@ class Environment:
         self.period = self.period + 1
         if self.period == self.number_of_agents_group:
             self.period = 0
+        '''
 
     def averaging(self):
         """
@@ -442,8 +469,15 @@ class Environment:
         """
 
         for step in range(self.time_steps):
-            buyers, sellers, satisfied = self.list_buyers_sellers_satisfied2()
+
+            self.add_emission(step)
+            self.add_credits(step)
+
+            self.day_of_the_month = step % CREDITS_ALLOCATION_INTERVAL      # computes the day of the month via modulo operator
+
+            buyers, sellers, satisfied = self.list_buyers_sellers_satisfied()
             sorted_b, sorted_s = self.sort_buyers_sellers(buyers, sellers)
+
 
             try:
                 if version == 1:
@@ -455,8 +489,6 @@ class Environment:
             except Exception as e:
                 print(e)
 
-            self.add_emission(step)
-            self.add_credits(step)
 
         return_pr, average_em = self.statistics()
 
