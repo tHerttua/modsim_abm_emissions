@@ -1,5 +1,5 @@
 #Control the price update
-UPDATE_RATE = 0.01
+UPDATE_RATE = 0.05
 REDUCE_RATE = 0.3
 
 from math import floor
@@ -16,7 +16,7 @@ class Agent:
                  group=0):
 
         self.emissions_amount = emissions_amount
-        self.pre_allocated_credits = - pre_allocated_credits/2
+        self.pre_allocated_credits = 0
         self.pre_allocated_credits_init = pre_allocated_credits
         self.max_buying_price = max_buying_price
         self.max_buying_price_init = max_buying_price
@@ -51,28 +51,52 @@ class Agent:
     def decrease_credits(self):
         self.pre_allocated_credits -= 1
 
-    def update_selling_price(self, step):
+    def record_price(self, step):
+        self.min_selling_price_series[step] = self.min_selling_price
+        self.max_buying_price_series[step] = self.max_buying_price
+
+    def update_selling_price2(self, step):
         """
         The selling price is updated if the current step doesn't have record of a transaction.
         New price is calculated per update rate
         """
-        self.min_selling_price_series[step] = self.min_selling_price
         if len(self.deals_sold[step]) != 0:
-            self.min_selling_price = max(self.max_buying_price, self.min_selling_price + abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
+            self.min_selling_price = self.min_selling_price * (1 + UPDATE_RATE)
         else:
-            self.min_selling_price = max(self.min_selling_price_init * 0.7, self.min_selling_price - abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
-# Change number 0.7 to parameter "update_rate"
-    def update_buying_price(self, step):
+            self.min_selling_price = self.min_selling_price * (1 - UPDATE_RATE)
+
+    def update_buying_price2(self, step):
         """
         The buying price is updated if the current step doesn't have record of a transaction.
         New price is calculated per update rate
         """
-        self.max_buying_price_series[step] = self.max_buying_price
+
+        if len(self.deals_bought[step]) != 0:
+            self.max_buying_price = self.max_buying_price * (1 - UPDATE_RATE)
+        else:
+            self.max_buying_price = self.max_buying_price + (1 + UPDATE_RATE)
+
+
+    def update_selling_price1(self, step):
+        """
+        The selling price is updated if the current step doesn't have record of a transaction.
+        New price is calculated per update rate
+        """
+        if len(self.deals_sold[step]) != 0:
+            self.min_selling_price = max(self.max_buying_price, self.min_selling_price + abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
+        else:
+            self.min_selling_price = max(self.min_selling_price_init * 0.7, self.min_selling_price - abs(self.original_price - self.min_selling_price) * UPDATE_RATE)
+
+    def update_buying_price1(self, step):
+        """
+        The buying price is updated if the current step doesn't have record of a transaction.
+        New price is calculated per update rate
+        """
         if len(self.deals_bought[step]) != 0:
             self.max_buying_price = min(self.min_selling_price, self.max_buying_price - abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
         else:
             self.max_buying_price = min(self. max_buying_price_init * 1.3, self.max_buying_price + abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
-# same issue as above: Change number 1.3 to a parameter
+
 
     def emissions_add(self, add):
         self.emissions_amount = self.emissions_amount + add
