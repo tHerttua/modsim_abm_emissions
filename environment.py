@@ -338,10 +338,10 @@ class Environment:
             agent.record_price(step)
 
         for agent in buyers:
-            agent.update_buying_price3(step)
+            agent.update_buying_price4(step)
             agent.reset_quota()
         for agent in sellers:
-            agent.update_selling_price3(step)
+            agent.update_selling_price4(step)
             agent.reset_quota()
 
 

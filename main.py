@@ -95,9 +95,7 @@ def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit
 Groups have the following emissions averages,
 and they're used as a proxy for the initial credits.
 (Subject to having divisor of 30 (days per month))
-
 monthly allowances = (avg_emission / 12) - (avg_emission / 12) % 30
-
 Groups  Average Emissions   Allowance credits assigned monthly
 1	    883.39              60
 2	    2886.11             180
@@ -109,8 +107,6 @@ Groups  Average Emissions   Allowance credits assigned monthly
 8	    49125.83            4080
 9	    89848.94            7470
 10	    366534.00           30540
-
-
 
 """
 
@@ -147,13 +143,19 @@ if __name__ == '__main__':
     if modus == 1:
         # Are Free Allowances Reduces over time unexpectedly for Agents
         # Value is per step Reduction Factor
-        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 50, change = 0.005, limit = 8)
+        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 50, change = 0.01, limit = 3)
         pass
     elif modus == 2:
         #"rate" is unexpected credit reduction rate
         #"change" is how much addionaly transactions are allowed per iteration,
         #"limit" is number of iterations
         chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 0.99, change = 10, limit = 5)
+
+    elif modus == 3:
+        #"rate" is unexpected credit reduction rate
+        #"change" is how much addionaly transactions are allowed per iteration,
+        #"limit" is number of iterations
+        many_runs(allowances, random_sel, em_red, limit_transaction = 20, cred_red_rate = 1, change = 10, limit = 5)
 
 
 

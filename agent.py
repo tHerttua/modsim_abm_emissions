@@ -1,5 +1,5 @@
 #Control the price update
-UPDATE_RATE = 0.2#0.5 makes the model unstable (too much changes, always different outcomes)
+UPDATE_RATE = 0.05#0.5 makes the model unstable (too much changes, always different outcomes)
 REDUCE_RATE = 0.3
 
 from math import floor
@@ -122,6 +122,27 @@ class Agent:
             self.max_buying_price = min(self.min_selling_price, self.max_buying_price - abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
         else:
             self.max_buying_price = min(self. max_buying_price_init * 1.3, self.max_buying_price + abs(self.max_buying_price - self.original_price) * UPDATE_RATE)
+
+    def update_selling_price4(self, step):
+        """
+        The selling price is updated if the current step doesn't have record of a transaction.
+        New price is calculated per update rate
+        """
+        if len(self.deals_sold[step]) != 0:
+            self.min_selling_price = self.min_selling_price + 1
+        else:
+            self.min_selling_price = max(self.max_buying_price,self.min_selling_price -1)
+
+    def update_buying_price4(self, step):
+        """
+        The buying price is updated if the current step doesn't have record of a transaction.
+        New price is calculated per update rate
+        """
+        if len(self.deals_bought[step]) != 0:
+            self.max_buying_price = max(self.max_buying_price - 1, 1)
+        else:
+            self.max_buying_price = min(self.max_buying_price + 1, self.min_selling_price)
+
 
 
     def emissions_add(self, add):
