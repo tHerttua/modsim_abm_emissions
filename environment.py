@@ -12,16 +12,17 @@ WILLINGNESS_GAP = 10
 ORIGINAL_PRICE = 60
 PRICE_CONTROL_VALUE = 20
 CREDITS_ALLOCATION_INTERVAL = 32
-certificate_reductionrate = 0.97
 
 
 class Environment:
-    def __init__(self, number_of_agents_per_group,
+    def __init__(self, modus_name, titlevalue,
+                 number_of_agents_per_group,
                  number_of_agents_group,
                  allowance_credits,
                  agent_transaction_limit,
                  time_steps,
-                 iterate):
+                 iterate,
+                 certificate_reductionrate):
         self.number_of_agents = number_of_agents_per_group * number_of_agents_group
         self.number_of_agents_group = number_of_agents_group
         self.time_steps = time_steps
@@ -32,11 +33,16 @@ class Environment:
         self.results = []
         self.num_transaction_series = []
         self.num_reduce_emission_series = []
+        self.num_buy = []
+        self.num_sel = []
         self.agents_no_emission_added = [i for i in range(0, self.number_of_agents)]
         self.number_of_agents_per_group = number_of_agents_per_group
         self.period = 0
         self.iterate = iterate
         self.day_of_the_month = 0
+        self.certificate_reductionrate = certificate_reductionrate
+        self.modus_name = modus_name
+        self.titlevalue = str(titlevalue)
 
 
     def create_agents(self):
@@ -134,13 +140,12 @@ class Environment:
 
     def list_buyers_sellers_satisfied2(self):
         # Version 2: divides Buyers/sellers randomly.
-        # Correct? @sebi
 
-        who_buyer = random.sample(range(len(self.agents)), int(math.floor(len(self.agents)/2)))
+        who_buyer = random.sample(range(len(self.agents)), int(math.floor(len(self.agents)/2 )))
         buyers = []
         sellers = []
         satisfied = []
-        j = 1
+        j = 0
 
         for agent in self.agents:
             if (j in who_buyer):
@@ -333,10 +338,10 @@ class Environment:
             agent.record_price(step)
 
         for agent in buyers:
-            agent.update_buying_price2(step)
+            agent.update_buying_price3(step)
             agent.reset_quota()
         for agent in sellers:
-            agent.update_selling_price2(step)
+            agent.update_selling_price3(step)
             agent.reset_quota()
 
 
@@ -357,7 +362,7 @@ class Environment:
         """
         if (step % CREDITS_ALLOCATION_INTERVAL) == 0:
             for agent in self.agents:
-                agent.pre_allocated_credits = agent.pre_allocated_credits + agent.pre_allocated_credits_init * certificate_reductionrate
+                agent.pre_allocated_credits = agent.pre_allocated_credits + agent.pre_allocated_credits_init * self.certificate_reductionrate
 
     def add_emission(self, step):
         """
@@ -433,6 +438,7 @@ class Environment:
 
     def plot_agents(self):
         """
+        in this method we plot several keynumers of the agents
         """
         Nlines = 3
 
@@ -454,8 +460,9 @@ class Environment:
             j = j + 1
 
         plt.xlabel('Steps')
-        plt.ylabel('Emmissions and Credits')
-        plt.savefig("pics/"+str(self.iterate)+"agents.png")
+        plt.ylabel('Emissions and Credits from 3 Agents')
+        plt.title("Modus of Simulation: " + self.modus_name+ " " + self.titlevalue)
+        plt.savefig("pics/"+self.modus_name+str(self.iterate)+"representative_agents.png")
         #plt.show()
         plt.clf()
 
@@ -469,19 +476,31 @@ class Environment:
 
         average_price_bought, average_price_sold, average_emission, average_credits, average_max_buying_price, average_min_selling_price = self.averaging()
 
+        plt.plot(self.num_buy, label ="Total Number of Buyers")
+        plt.plot(self.num_sel, '--', label="Total Number of Sellers")
+        plt.legend()
+        plt.xlabel('Steps')
+        plt.ylabel('Number of Agents')
+        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+        plt.savefig("pics/"+self.modus_name+str(self.iterate)+ "Number_Buy_sel.png")
+        #plt.show()
+        plt.clf()
+
         plt.plot(self.num_transaction_series, label ="Total Number of Transactions")
         plt.plot(self.num_reduce_emission_series, label ="Transactions because of Emissions Reduced")
         plt.legend()
         plt.xlabel('Steps')
         plt.ylabel('Number of Transactions')
-        plt.savefig("pics/"+str(self.iterate)+ "agentss.png")
+        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+        plt.savefig("pics/"+self.modus_name+str(self.iterate)+ "Number_of_Transactions.png")
         #plt.show()
         plt.clf()
 
         plt.plot(average_price_bought)
         plt.xlabel('Steps')
-        plt.ylabel('Average Prices Paid')
-        plt.savefig("pics/"+str(self.iterate)+"agents3.png")
+        plt.ylabel('Average Prices Paid per Agent')
+        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+        plt.savefig("pics/"+self.modus_name+str(self.iterate)+"average_price.png")
         #plt.show()
         plt.clf()
 
@@ -491,27 +510,31 @@ class Environment:
         #plt.show()
         plt.clf()
 
-        plt.plot(average_emission, label ="Average amount of Emissions")
-        plt.plot(average_credits, label ="Average amount of Credits")
+        plt.plot(average_emission, label ="Average amount of Emissions per Agent")
+        plt.plot(average_credits, label ="Average amount of Credits per Agent")
         plt.legend()
         plt.xlabel('days')
         plt.ylabel('Emissions and Credits')
-        plt.savefig("pics/"+str(self.iterate) +"agents4.png")
+        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+        plt.savefig("pics/"+self.modus_name+str(self.iterate) +"average emissions and credits per agent.png")
         #plt.show()
         plt.clf()
 
-        plt.plot(average_min_selling_price, label ="Average Minimal Selling Price")
-        plt.plot(average_max_buying_price, label ="Average Maximal Buying Price")
+        plt.plot(average_min_selling_price, label ="Average Minimal Selling Price per Agent")
+        plt.plot(average_max_buying_price, label ="Average Maximal Buying Price per Agent")
         plt.legend()
         plt.xlabel('Step')
         plt.ylabel('Average Price')
-        plt.savefig("pics/"+str(self.iterate) +"agents6.png")
+        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+        plt.savefig("pics/"+self.modus_name+str(self.iterate) +"average minimal selling buying price.png")
         #plt.show()
         plt.clf()
 
         return average_price_sold, average_emission
 
-    def do_magic(self, version=1):
+    def do_magic(self,
+                 random_sel = False,
+                    em_red = True):
         """
             • Buyers list sorted by max price
             • Sellers list sorted by min price
@@ -530,18 +553,20 @@ class Environment:
 
             self.day_of_the_month = step % CREDITS_ALLOCATION_INTERVAL      # computes the day of the month via modulo operator
 
-            buyers, sellers, satisfied = self.list_buyers_sellers_satisfied()
+
+            if random_sel == False:
+                buyers, sellers, satisfied = self.list_buyers_sellers_satisfied()
+            else:
+                buyers, sellers, satisfied = self.list_buyers_sellers_satisfied2()
+            self.num_buy.append(len(buyers))
+            self.num_sel.append(len(sellers))
             sorted_b, sorted_s = self.sort_buyers_sellers(buyers, sellers)
 
 
             try:
-                if version == 1:
-                    self.do_transactions(sorted_b, sorted_s, step)
-                elif version == 2:
-                    self.do_transactions2(sorted_b, sorted_s, step)
-                elif version == 3:
+                if em_red ==True:
                     self.do_transactions3(sorted_b, sorted_s, step)
-                elif version == 4:
+                else:
                     self.do_transactions4(sorted_b, sorted_s, step)
 
             except Exception as e:
@@ -552,7 +577,7 @@ class Environment:
 
         self.plot_agents()
 
-        return [return_pr,average_em]
+        return [return_pr, average_em]
 
 
 

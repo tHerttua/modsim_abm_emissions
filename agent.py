@@ -1,8 +1,11 @@
 #Control the price update
-UPDATE_RATE = 0.05
+UPDATE_RATE = 0.2#0.5 makes the model unstable (too much changes, always different outcomes)
 REDUCE_RATE = 0.3
 
 from math import floor
+from math import exp
+from math import log
+import numpy as np
 
 
 class Agent:
@@ -74,7 +77,30 @@ class Agent:
         if len(self.deals_bought[step]) != 0:
             self.max_buying_price = self.max_buying_price * (1 - UPDATE_RATE)
         else:
-            self.max_buying_price = self.max_buying_price + (1 + UPDATE_RATE)
+            self.max_buying_price = self.max_buying_price * (1 + UPDATE_RATE)
+
+    def update_selling_price3(self, step):
+        """
+        The selling price is updated if the current step doesn't have record of a transaction.
+        New price is calculated per update rate (concave)
+        """
+        if len(self.deals_sold[step]) != 0:
+
+            self.min_selling_price = log(exp(self.min_selling_price) * (1 + UPDATE_RATE))
+
+        else:
+            self.min_selling_price = log(exp(self.min_selling_price) * (1 - UPDATE_RATE))
+
+    def update_buying_price3(self, step):
+        """
+        The buying price is updated if the current step doesn't have record of a transaction.
+        New price is calculated per update rate (concave)
+        """
+
+        if len(self.deals_bought[step]) != 0:
+            self.max_buying_price = log(exp(self.max_buying_price) * (1 - UPDATE_RATE))
+        else:
+            self.max_buying_price = log(exp(self.max_buying_price) * (1 + UPDATE_RATE))
 
 
     def update_selling_price1(self, step):
