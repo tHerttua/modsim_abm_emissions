@@ -30,6 +30,42 @@ def plot_result(label, result_pr, result_em, modus_name, change, runs):
     #plt.show()s
     plt.clf()
 
+def plot_result_aver(label, result_pr, result_em, modus_name):
+    price_av, emission_av = avering(result_pr, result_em)
+
+    plt.plot(price_av, color = "red", label="Average Price")
+    plt.legend()
+
+    for i in range(len(result_pr)):
+        plt.plot(result_pr[i], color = "grey", alpha=0.1)
+
+    plt.xlabel('Steps')
+    plt.ylabel('Price paid different runs')
+    plt.savefig("pics/"+"Average_price.png")
+    #plt.show()s
+    plt.clf()
+
+
+def avering(result_pr, result_em):
+
+    price = []
+    emissions = []
+
+    for step in range(len(result_pr[1])):
+        price_tmp = 0
+        emissions_tmp = 0
+        for j in range(len(result_pr)):
+            price_tmp = price_tmp + result_pr[j][step]
+            emissions_tmp = emissions_tmp + result_em[j][step]
+
+        price_tmp = price_tmp/len(result_pr)
+        emissions_tmp = emissions_tmp / len(result_pr)
+        price.append(price_tmp)
+        emissions.append(emissions_tmp)
+
+    return price, emissions
+
+
 def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, limit):
     modus_name = "Changing Reduction Rate of Credits"
     label = "Reduction Rate: "
@@ -51,10 +87,12 @@ def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, li
         env.create_agents()
         result = env.do_magic(
                           random_sel,
-                          em_red)
+                          em_red,
+        plots= True)
 
         result_pr.append(result[0])
         result_em.append(result[1])
+        print(str(i) + " run, finished")
 
     plot_result(label, result_pr, result_em, modus_name, -change, runs)
 
@@ -81,13 +119,44 @@ def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit
         env.create_agents()
         result = env.do_magic(
                           random_sel,
-                          em_red)
+                          em_red,
+        plots = True)
 
         result_pr.append(result[0])
         result_em.append(result[1])
+        print(str(i) + " run, finished")
 
     plot_result(label, result_pr, result_em, modus_name, change, runs)
 
+def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate , limit):
+    modus_name = "Changing Number of Transaction Limit"
+    label = "Avererging: "
+    runs = limit
+    result_pr =[]
+    result_em = []
+
+    for i in range(runs):
+
+        env = Environment(modus_name,
+                          titlevalue = "",
+                          number_of_agents_per_group=20,
+                          number_of_agents_group=10,
+                          allowance_credits=allowances,
+                          agent_transaction_limit=limit_transaction,
+                          time_steps=365,
+                          iterate=i,
+                          certificate_reductionrate = cred_red_rate)
+        env.create_agents()
+        result = env.do_magic(
+                          random_sel,
+                          em_red, plots = False)
+
+        result_pr.append(result[0])
+        result_em.append(result[1])
+        print(str(i) + " run, finished")
+
+
+    plot_result_aver(label, result_pr, result_em, modus_name)
 
 
 """
@@ -139,7 +208,7 @@ if __name__ == '__main__':
     #modus = 2 for investigating an unexpected reduction per step of free allowances per month
     #modus = 3 is for averaging over the price development over several months
 
-    modus = 1
+    modus = 3
     if modus == 1:
         # Are Free Allowances Reduces over time unexpectedly for Agents
         # Value is per step Reduction Factor
@@ -155,7 +224,7 @@ if __name__ == '__main__':
         #"rate" is unexpected credit reduction rate
         #"change" is how much addionaly transactions are allowed per iteration,
         #"limit" is number of iterations
-        many_runs(allowances, random_sel, em_red, limit_transaction = 20, cred_red_rate = 1, change = 10, limit = 5)
+        many_runs(allowances, random_sel, em_red, limit_transaction = 20, cred_red_rate = 0.97, limit = 20)
 
 
 

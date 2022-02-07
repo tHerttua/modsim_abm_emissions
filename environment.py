@@ -8,7 +8,6 @@ from itertools import permutations
 #Control the amount of variance, could be made part of the environment for ease of use
 EMISSION_VARIANCE = 0.9
 PRICE_VARIANCE = 0.8
-WILLINGNESS_GAP = 10
 ORIGINAL_PRICE = 60
 PRICE_CONTROL_VALUE = 20
 CREDITS_ALLOCATION_INTERVAL = 30
@@ -469,72 +468,79 @@ class Environment:
 
 
 
-    def statistics(self):
+    def statistics(self, plots):
         """
         Draws the statistics
         """
 
         average_price_bought, average_price_sold, average_emission, average_credits, average_max_buying_price, average_min_selling_price = self.averaging()
 
-        plt.plot(self.num_buy, label ="Total Number of Buyers")
-        plt.plot(self.num_sel, '--', label="Total Number of Sellers")
-        plt.legend()
-        plt.xlabel('Steps')
-        plt.ylabel('Number of Agents')
-        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
-        plt.savefig("pics/"+self.modus_name+str(self.iterate)+ "Number_Buy_sel.png")
-        #plt.show()
-        plt.clf()
+        if plots == True:
 
-        plt.plot(self.num_transaction_series, label ="Total Number of Transactions")
-        plt.plot(self.num_reduce_emission_series, label ="Transactions because of Emissions Reduced")
-        plt.legend()
-        plt.xlabel('Steps')
-        plt.ylabel('Number of Transactions')
-        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
-        plt.savefig("pics/"+self.modus_name+str(self.iterate)+ "Number_of_Transactions.png")
-        #plt.show()
-        plt.clf()
+            self.plot_agents()
 
-        plt.plot(average_price_bought)
-        plt.xlabel('Steps')
-        plt.ylabel('Average Prices Paid per Agent')
-        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
-        plt.savefig("pics/"+self.modus_name+str(self.iterate)+"average_price.png")
-        #plt.show()
-        plt.clf()
+            plt.plot(self.num_buy, label ="Total Number of Buyers")
+            plt.plot(self.num_sel, '--', label="Total Number of Sellers")
+            plt.legend()
+            plt.xlabel('Steps')
+            plt.ylabel('Number of Agents')
+            plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+            plt.savefig("pics/"+self.modus_name+str(self.iterate)+ "Number_Buy_sel.png")
+            #plt.show()
+            plt.clf()
 
-        #plt.plot(average_price_sold)
-        #plt.xlabel('steps')
-        #plt.ylabel('Average prices sold')
-        #plt.show()
-        plt.clf()
+            plt.plot(self.num_transaction_series, label ="Total Number of Transactions")
+            plt.plot(self.num_reduce_emission_series, label ="Transactions because of Emissions Reduced")
+            plt.legend()
+            plt.xlabel('Steps')
+            plt.ylabel('Number of Transactions')
+            plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+            plt.savefig("pics/"+self.modus_name+str(self.iterate)+ "Number_of_Transactions.png")
+            #plt.show()
+            plt.clf()
 
-        plt.plot(average_emission, label ="Average amount of Emissions per Agent")
-        plt.plot(average_credits, label ="Average amount of Credits per Agent")
-        plt.legend()
-        plt.xlabel('days')
-        plt.ylabel('Emissions and Credits')
-        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
-        plt.savefig("pics/"+self.modus_name+str(self.iterate) +"average emissions and credits per agent.png")
-        #plt.show()
-        plt.clf()
 
-        plt.plot(average_min_selling_price, label ="Average Minimal Selling Price per Agent")
-        plt.plot(average_max_buying_price, label ="Average Maximal Buying Price per Agent")
-        plt.legend()
-        plt.xlabel('Step')
-        plt.ylabel('Average Price')
-        plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
-        plt.savefig("pics/"+self.modus_name+str(self.iterate) +"average minimal selling buying price.png")
-        #plt.show()
-        plt.clf()
 
-        return average_price_sold, average_emission
+            #plt.plot(average_price_sold)
+            #plt.xlabel('steps')
+            #plt.ylabel('Average prices sold')
+            #plt.show()
+            plt.clf()
+
+            plt.plot(average_emission, label ="Average amount of Emissions per Agent")
+            plt.plot(average_credits, label ="Average amount of Credits per Agent")
+            plt.legend()
+            plt.xlabel('days')
+            plt.ylabel('Emissions and Credits')
+            plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+            plt.savefig("pics/"+self.modus_name+str(self.iterate) +"average emissions and credits per agent.png")
+            #plt.show()
+            plt.clf()
+
+            plt.plot(average_min_selling_price, label ="Average Minimal Selling Price per Agent")
+            plt.plot(average_max_buying_price, label ="Average Maximal Buying Price per Agent")
+            plt.legend()
+            plt.xlabel('Step')
+            plt.ylabel('Average Price')
+            plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+            plt.savefig("pics/"+self.modus_name+str(self.iterate) +"average minimal selling buying price.png")
+            #plt.show()
+            plt.clf()
+
+            plt.plot(average_price_bought)
+            plt.xlabel('Steps')
+            plt.ylabel('Average Prices Paid per Agent')
+            plt.title("Modus of Simulation: " + self.modus_name + " " + self.titlevalue)
+            plt.savefig("pics/" + self.modus_name + str(self.iterate) + "average_price.png")
+            # plt.show()
+            plt.clf()
+
+        return average_price_bought, average_emission
 
     def do_magic(self,
                  random_sel = False,
-                    em_red = True):
+                    em_red = True,
+                 plots = True):
         """
             • Buyers list sorted by max price
             • Sellers list sorted by min price
@@ -573,9 +579,8 @@ class Environment:
                 print(e)
 
 
-        return_pr, average_em = self.statistics()
+        return_pr, average_em = self.statistics(plots)
 
-        self.plot_agents()
 
         return [return_pr, average_em]
 
