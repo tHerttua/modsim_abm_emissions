@@ -535,7 +535,7 @@ class Environment:
             # plt.show()
             plt.clf()
 
-        return average_price_bought, average_emission
+        return average_price_bought, self.num_transaction_series
 
     def do_magic(self,
                  random_sel = False,

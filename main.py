@@ -20,18 +20,18 @@ def plot_result(label, result_pr, result_em, modus_name, change, runs):
     for i in range(len(result_em)):
 
         plt.plot(result_em[i], '-', color=plt.cm.RdYlBu(np.linspace(0, 1, runs)[i]),
-                         label=label+ str(i*10 +1))
+                         label=label + str(i*change +1))
         plt.legend()
 
     plt.xlabel('Steps')
-    plt.ylabel('Emissions average per agents per run')
+    plt.ylabel('Transactions average per run')
     plt.title("Modus of Simulation: " + modus_name)
-    plt.savefig("pics/"+modus_name+"Emission.png")
+    plt.savefig("pics/"+modus_name+"transaction.png")
     #plt.show()s
     plt.clf()
 
 def plot_result_aver(label, result_pr, result_em, modus_name):
-    price_av, emission_av = avering(result_pr, result_em)
+    price_av, transaction_av = avering(result_pr, result_em)
 
     plt.plot(price_av, color = "red", label="Average Price")
     plt.legend()
@@ -45,25 +45,37 @@ def plot_result_aver(label, result_pr, result_em, modus_name):
     #plt.show()s
     plt.clf()
 
+    plt.plot(transaction_av, color = "blue", label="Average Transaction Number")
+    plt.legend()
+
+    for i in range(len(result_pr)):
+        plt.plot(result_em[i], color = "grey", alpha=0.1)
+
+    plt.xlabel('Steps')
+    plt.ylabel('Transactions done different runs')
+    plt.savefig("pics/"+"Average_Transaction.png")
+    #plt.show()s
+    plt.clf()
+
 
 def avering(result_pr, result_em):
 
     price = []
-    emissions = []
+    transaction = []
 
     for step in range(len(result_pr[1])):
         price_tmp = 0
-        emissions_tmp = 0
+        transaction_tmp = 0
         for j in range(len(result_pr)):
             price_tmp = price_tmp + result_pr[j][step]
-            emissions_tmp = emissions_tmp + result_em[j][step]
+            transaction_tmp = transaction_tmp + result_em[j][step]
 
         price_tmp = price_tmp/len(result_pr)
-        emissions_tmp = emissions_tmp / len(result_pr)
+        transaction_tmp = transaction_tmp / len(result_pr)
         price.append(price_tmp)
-        emissions.append(emissions_tmp)
+        transaction.append(transaction_tmp)
 
-    return price, emissions
+    return price, transaction
 
 
 def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, limit):
@@ -128,8 +140,8 @@ def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit
 
     plot_result(label, result_pr, result_em, modus_name, change, runs)
 
-def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate , limit):
-    modus_name = "Changing Number of Transaction Limit"
+def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate , limit, plots):
+    modus_name = "Average"
     label = "Avererging: "
     runs = limit
     result_pr =[]
@@ -149,7 +161,7 @@ def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate ,
         env.create_agents()
         result = env.do_magic(
                           random_sel,
-                          em_red, plots = False)
+                          em_red, plots = plots)
 
         result_pr.append(result[0])
         result_em.append(result[1])
@@ -199,7 +211,7 @@ if __name__ == '__main__':
     # Are buyers and Sellers Randomly Selected or after Logic
     random_sel = False
     # Can Sellers Reduce Emissions after successful Deal in the same step for addionally selling credits
-    em_red = False
+    em_red = True
 
     #Modus
 
@@ -209,22 +221,23 @@ if __name__ == '__main__':
     #modus = 3 is for averaging over the price development over several months
 
     modus = 3
+
     if modus == 1:
         # Are Free Allowances Reduces over time unexpectedly for Agents
         # Value is per step Reduction Factor
-        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 50, change = 0.01, limit = 3)
+        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 200, change = 0.02, limit = 3)
         pass
     elif modus == 2:
         #"rate" is unexpected credit reduction rate
         #"change" is how much addionaly transactions are allowed per iteration,
         #"limit" is number of iterations
-        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 0.99, change = 10, limit = 5)
+        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 0.99, change = 50, limit = 5)
 
     elif modus == 3:
         #"rate" is unexpected credit reduction rate
         #"change" is how much addionaly transactions are allowed per iteration,
         #"limit" is number of iterations
-        many_runs(allowances, random_sel, em_red, limit_transaction = 20, cred_red_rate = 0.97, limit = 20)
+        many_runs(allowances, random_sel, em_red, limit_transaction = 200, cred_red_rate = 1, limit = 20, plots = False)
 
 
 
