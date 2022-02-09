@@ -83,7 +83,7 @@ def avering(result_pr, result_em):
     return price, transaction
 
 
-def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, limit):
+def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, limit, num_agents_group):
     #modus = 1, makes agent based modeling in the manner that it
     #runs multiple times the model with changing credit-reducing-rate
     modus_name = "Changing Reduction Rate of Credits"
@@ -96,8 +96,8 @@ def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, li
 
         env = Environment(modus_name,
                           titlevalue = (1 - i * change),
-                          number_of_agents_per_group=20,
-                          number_of_agents_group=10,
+                          number_of_agents_per_group=num_agents_group,
+                          number_of_agents_group=len(allowances),
                           allowance_credits=allowances,
                           agent_transaction_limit=limit_transaction,
                           time_steps=365,
@@ -117,7 +117,7 @@ def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, li
 
 
 
-def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit):
+def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit, num_agents_group):
     #modus = 2, makes agent based modeling in the manner that it
     #runs multiple times the model with changing transactional limit
     modus_name = "Changing Number of Transaction Limit"
@@ -130,8 +130,8 @@ def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit
 
         env = Environment(modus_name,
                           titlevalue = (1 + i * change),
-                          number_of_agents_per_group=20,
-                          number_of_agents_group=10,
+                          number_of_agents_per_group=num_agents_group,
+                          number_of_agents_group=len(allowances),
                           allowance_credits=allowances,
                           agent_transaction_limit=(1 + i * change),
                           time_steps=365,
@@ -149,7 +149,7 @@ def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit
 
     plot_result(label, result_pr, result_em, modus_name, change, runs)
 
-def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate , limit, plots):
+def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate , limit, plots, num_agents_group):
     #modus = 3, makes agent based modeling in the manner that it
     #runs multiple times the model with the same parameters and averages over the results
     # and plots them
@@ -163,8 +163,8 @@ def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate ,
 
         env = Environment(modus_name,
                           titlevalue = "",
-                          number_of_agents_per_group=20,
-                          number_of_agents_group=10,
+                          number_of_agents_per_group=num_agents_group,
+                          number_of_agents_group=len(allowances),
                           allowance_credits=allowances,
                           agent_transaction_limit=limit_transaction,
                           time_steps=365,
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     #modus = 3 is for averaging over the price and transaction numbers development
     # over multiple runs by keeping initial parameters concant several months
 
-    modus = 3
+    modus = 1
 
     #limit transaction is the max number of transactions per agent per step
     #each transaction can just include 1 credit or eventually 1 emission
@@ -265,12 +265,14 @@ if __name__ == '__main__':
     # plot is just an option for the last function, which says
     # whether each run plots from each run should be saved
 
+    #num_agents_group is number of agents per group
+
     if modus == 1:
-        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 40, change = 0.02, limit = 3)
+        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 40, change = 0.02, limit = 3, num_agents_group = 10)
         pass
     elif modus == 2:
-        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 1, change = 20, limit = 5)
+        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 1, change = 20, limit = 5, num_agents_group = 10)
 
     elif modus == 3:
-        many_runs(allowances, random_sel, em_red, limit_transaction = 40, cred_red_rate = 0.96, limit = 20, plots = False)
+        many_runs(allowances, random_sel, em_red, limit_transaction = 40, cred_red_rate = 0.96, limit = 20, plots = False, num_agents_group = 10)
 
