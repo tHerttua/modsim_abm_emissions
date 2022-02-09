@@ -2,7 +2,10 @@ from environment import Environment
 import matplotlib.pyplot as plt
 import numpy as np
 
+#Methods for ploting and calculating the results
+
 def plot_result(label, result_pr, result_em, modus_name, change, runs):
+#plots results for modus = 1 and modus = 2
 
     for i in range(len(result_pr)):
 
@@ -31,6 +34,8 @@ def plot_result(label, result_pr, result_em, modus_name, change, runs):
     plt.clf()
 
 def plot_result_aver(label, result_pr, result_em, modus_name):
+    #polot results for modus = 3, meaning ploting average line
+    # as well as light grey path lines of each run
     price_av, transaction_av = avering(result_pr, result_em)
 
     plt.plot(price_av, color = "red", label="Average Price")
@@ -59,7 +64,7 @@ def plot_result_aver(label, result_pr, result_em, modus_name):
 
 
 def avering(result_pr, result_em):
-
+    #averages over all runds of modus = 3
     price = []
     transaction = []
 
@@ -79,6 +84,8 @@ def avering(result_pr, result_em):
 
 
 def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, limit):
+    #modus = 1, makes agent based modeling in the manner that it
+    #runs multiple times the model with changing credit-reducing-rate
     modus_name = "Changing Reduction Rate of Credits"
     label = "Reduction Rate: "
     runs = limit
@@ -111,6 +118,8 @@ def chan_cred_red(allowances, random_sel, em_red, limit_transaction,  change, li
 
 
 def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit):
+    #modus = 2, makes agent based modeling in the manner that it
+    #runs multiple times the model with changing transactional limit
     modus_name = "Changing Number of Transaction Limit"
     label = "Transactionlimit: "
     runs = limit
@@ -141,6 +150,9 @@ def chan_tran_limit(allowances, random_sel, em_red, cred_red_rate, change, limit
     plot_result(label, result_pr, result_em, modus_name, change, runs)
 
 def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate , limit, plots):
+    #modus = 3, makes agent based modeling in the manner that it
+    #runs multiple times the model with the same parameters and averages over the results
+    # and plots them
     modus_name = "Average"
     label = "Avererging: "
     runs = limit
@@ -170,7 +182,7 @@ def many_runs(allowances, random_sel, em_red, limit_transaction, cred_red_rate ,
 
     plot_result_aver(label, result_pr, result_em, modus_name)
 
-
+#initializing the model
 """
 200 companies split between 10 groups (every 10th percentile)
 Groups have the following emissions averages,
@@ -206,42 +218,59 @@ if __name__ == '__main__':
         30540
     ]
 
+    #note, for us credits, allocations and allowances are the same thing
+
     #Settings
 
-    # Are buyers and Sellers Randomly Selected or after Logic
+    #here can be put two extensions on of
+
+    #first
+    # Are buyers and Sellers Randomly Selected or after a Logic
+    #True =  they are randomly selected
     random_sel = False
-    # Can Sellers Reduce Emissions after successful Deal in the same step for addionally selling credits
-    em_red = True
+    #second
+    # Can Sellers Reduce Emissions after a successful Deal in the same step
+    # for addionally selling credits
+    #True =  it is possible to reduce emission for a deal
+    em_red = False
 
     #Modus
 
-    #Three Modes can be selected
-    #modus = 1 for investigating for changing transaction limits
-    #modus = 2 for investigating an unexpected reduction per step of free allowances per month
-    #modus = 3 is for averaging over the price development over several months
+    #Three Modes can be selected for calculating results and investigate different aspects of the model
 
-    modus = 3
+    #changing parameters of time
+    #modus = 1 for investigating an unexpected reduction per step of free allowances per month
+    #modus = 2 for investigating for changing transaction limits
+
+    #averaging over multiple runs
+    #modus = 3 is for averaging over the price and transaction numbers development
+    # over multiple runs by keeping initial parameters concant several months
+
+    modus = 2
+
+    #limit transaction is the max number of transactions per agent per step
+    #each transaction can just include 1 credit or eventually 1 emission
+    #200 works very good but takes a lot of comuptation so we take 40
+
+
+    #change ist the changing parameter per run
+        #mode = 1 decreases the reduction factor by 1 - change * number_of_run
+        #mode = 2 increases limit transaction by 1 + change * number_of_run
+        #(Number_of_Run is initialized with 0)
+
+    #limit is the number of runs
+
+    # cred_red_rate is the rate with which new free allowances are unexptedely reduced for agents per month
+
+    # plot is just an option for the last function, which says
+    # whether each run plots from each run should be saved
 
     if modus == 1:
-        # Are Free Allowances Reduces over time unexpectedly for Agents
-        # Value is per step Reduction Factor
-        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 200, change = 0.02, limit = 3)
+        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 40, change = 0.02, limit = 3)
         pass
     elif modus == 2:
-        #"rate" is unexpected credit reduction rate
-        #"change" is how much addionaly transactions are allowed per iteration,
-        #"limit" is number of iterations
-        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 0.99, change = 50, limit = 5)
+        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 1, change = 20, limit = 5)
 
     elif modus == 3:
-        #"rate" is unexpected credit reduction rate
-        #"change" is how much addionaly transactions are allowed per iteration,
-        #"limit" is number of iterations
-        many_runs(allowances, random_sel, em_red, limit_transaction = 200, cred_red_rate = 1, limit = 20, plots = False)
-
-
-
-
-
-
+        many_runs(allowances, random_sel, em_red, limit_transaction = 40, cred_red_rate = 0.96, limit = 20, plots = False)
 

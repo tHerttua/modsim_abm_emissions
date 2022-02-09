@@ -72,9 +72,9 @@ class Environment:
 
     def randomize_emission_amount(self, agent):
         """
-        THIS NEEDS TO BE REVISED!
-
         The total allowance credits are divided per month because they are increased daily
+        emissions are stochastic distributed according to their allowances group
+        (dirty company, not dirty company)
         """
         all_cr = agent.pre_allocated_credits_init/CREDITS_ALLOCATION_INTERVAL
 
@@ -85,13 +85,14 @@ class Environment:
         return emission_amount
 
     def randomize_prices(self, original_price):
+        #randomizes prices
         min_price = int(math.floor(original_price - original_price * PRICE_VARIANCE))
         max_price = int(math.floor(original_price + original_price * PRICE_VARIANCE))
         random_price = random.randint(min_price, max_price)
 
         return random_price
 
-    def check_seller(self, agent):  #this i have to change !!! cause with too many emissions every one is a seller !!!!
+    def check_seller(self, agent):
         """
         check if an agent wants to sell
         it compares the total emission amount until now with the total number of credits minus the expected needed credits
@@ -128,8 +129,11 @@ class Environment:
         sellers = []
         satisfied = []
         for agent in self.agents:
-            if self.check_seller(agent): #the assumption is that a agent just wants to sell if he has initially more credits than emission
-                sellers.append(agent)    #at the transaction function he can make addionaly credits free by reducing emissions
+            if self.check_seller(agent):
+                #the assumption is that a agent just wants to sell if he has initially more credits
+                # than emission until the end of the month
+                sellers.append(agent)
+                #at the transaction function he can make addionaly credits free by reducing emissions
             elif self.check_buyer(agent):
                 buyers.append(agent)
             else:
@@ -139,7 +143,6 @@ class Environment:
 
     def list_buyers_sellers_satisfied2(self):
         # Version 2: divides Buyers/sellers randomly.
-
         who_buyer = random.sample(range(len(self.agents)), int(math.floor(len(self.agents)/2 )))
         buyers = []
         sellers = []
@@ -169,6 +172,7 @@ class Environment:
         """
         DEPRECATED
         Basic skeleton
+        not used anymore
         """
         if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
             if self.check_buyer(buyer) and self.check_seller(seller):
@@ -181,7 +185,8 @@ class Environment:
         First check if both buyer and seller have transactions left for the time step
         Then buyer check if the emissions (still) exceed the allowed amount,
         and seller checks if their emissions are (still) lower than the allowed amount OR
-        Seller will also agree if they are willing to drop emissions for this transaction
+        Seller will also agree if they are willing to drop emissions for this transaction and has done a transaction
+        in the previous step (otherwise he would now have been selected as seller initally)
         Last, if the buying price is higher than selling price, the transaction can be made
         """
         if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
@@ -191,67 +196,27 @@ class Environment:
                     return True
         return False
 
-    def do_transactions(self, buyers, sellers, step):
+    def check_transaction_condition4(self, buyer, seller):
         """
-        DEPRECATED
-        Basic functionality:
-        Iterates through the list of buyers in sequential activation order
-        buyer picks the seller promising lowest price and does transactions
-        until either transaction quota is depleted, or the emission allowance is satisfied
+        First check if both buyer and seller have transactions left for the time step
+        Then buyer check if the emissions (still) exceed the allowed amount,
+        and seller checks if their emissions are (still) lower than the allowed amount OR
+        Last, if the buying price is higher than selling price, the transaction can be made
         """
-        for buyer in buyers:
-            for seller in sellers:
-                i = 0
-                while self.check_transaction_condition(buyer, seller):
-                    i += 1
-                    buyer.do_transaction()
-                    buyer.add_credits()
-                    seller.do_transaction()
-                    seller.decrease_credits()
+        if buyer.number_transaction_left > 0 and seller.number_transaction_left > 0:
+            if self.check_buyer(buyer)  and self.check_seller(seller):
+                if buyer.max_buying_price > seller.min_selling_price:
+                    return True
+        return False
 
-    def do_transactions2(self, buyers, sellers, step):
-        """
-        DEPRECATED
-        Iterates through the list of buyers in sequential activation order
-        buyer picks the seller promising lowest price and does transactions
-        until either transaction quota is depleted, or the emission allowance is satisfied.
-        Updates buyers and sellers price and tracks the transactions.
-        """
-        num_transaction = 0
 
-        for buyer in buyers:
-            deals_buyer = []
-            for seller in sellers:
-                i = 0
-                deals_seller = []
-
-                while self.check_transaction_condition(buyer, seller):
-                    i += 1
-                    num_transaction = num_transaction + 1
-                    buyer.do_transaction()
-                    buyer.add_credits()
-                    seller.do_transaction()
-                    seller.decrease_credits()
-
-                    deals_buyer.append(seller.min_selling_price)
-                    deals_seller.append(seller.min_selling_price)
-                seller.deals_sold[step] = seller.deals_sold[step] + deals_seller
-            buyer.deals_bought[step] = buyer.deals_bought[step] + deals_buyer
-
-        self.num_transaction_series.append(num_transaction)
-        self.increase_incentives(step)
-
-        for agent in buyers:
-            agent.reset_quota()
-        for agent in sellers:
-            agent.reset_quota()
 
     def do_transactions3(self, buyers, sellers, step):
         """
         Iterates through the list of buyers in sequential activation order
         buyer picks the seller promising lowest price and does transactions
         until either transaction quota is depleted, or the emission allowance is satisfied.
-        Updates buyers and sellers price, and tracks the transactions.
+        Updates buyers and sellers price, and tracks the transactions. (records data)
         Added functionality: checks if an Agent has possibility to drop their emission amount.
         """
 
@@ -301,7 +266,6 @@ class Environment:
         buyer picks the seller promising lowest price and does transactions
         until either transaction quota is depleted, or the emission allowance is satisfied.
         Updates buyers and sellers price, and tracks the transactions.
-        Added functionality: checks if an Agent has possibility to drop their emission amount.
         """
 
         num_transaction = 0
@@ -312,7 +276,7 @@ class Environment:
                 i = 0
                 deals_seller = []
 
-                while self.check_transaction_condition3(buyer, seller):
+                while self.check_transaction_condition4(buyer, seller):
                     i += 1
                     num_transaction = num_transaction + 1
                     buyer.do_transaction()
