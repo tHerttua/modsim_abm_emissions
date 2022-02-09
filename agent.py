@@ -58,6 +58,9 @@ class Agent:
         self.min_selling_price_series[step] = self.min_selling_price
         self.max_buying_price_series[step] = self.max_buying_price
 
+    #now they are different version of our updating selling price and buyer price,
+    #we decided to stick to the last version (4)
+
     def update_selling_price2(self, step):
         """
         The selling price is updated if the current step doesn't have record of a transaction.
@@ -149,11 +152,11 @@ class Agent:
         self.emissions_amount = self.emissions_amount + add
         self.update_emission_ever_had(add)
 
-    def update_emission_ever_had(self, add):
+    def update_emission_ever_had(self, add):#need that for calculing the willingness to reduce emissions
         self.emission_ever_had = self.emission_ever_had + add
         self.updata_potential_reduce()
 
-    def updata_potential_reduce(self):
+    def updata_potential_reduce(self):#willing ness is rate of ever owned emissions minus already reduces emissions
         self.willingness_to_reduce = floor(self.emission_ever_had * REDUCE_RATE) - self.emission_have_reduced
 
     def reduce_emission(self):

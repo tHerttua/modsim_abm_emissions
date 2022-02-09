@@ -246,7 +246,7 @@ if __name__ == '__main__':
     #modus = 3 is for averaging over the price and transaction numbers development
     # over multiple runs by keeping initial parameters concant several months
 
-    modus = 2
+    modus = 3
 
     #limit transaction is the max number of transactions per agent per step
     #each transaction can just include 1 credit or eventually 1 emission

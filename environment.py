@@ -313,7 +313,7 @@ class Environment:
         If no transaction is made in the time step,
         buyer increases the price it's willing to buy at,
         and the seller decreases the price it's willing to sell at.
-        If a transaction is made, the prices are set back to initial prices
+        If a transaction is made, the prices adjusted in the favor of the repective buyer or seller
         """
         for agent in self.agents:
             agent.update_buying_price(step)
@@ -321,7 +321,7 @@ class Environment:
 
     def add_credits(self, step):
         """
-        When the current step matches the allocation interval,
+        addes credits each month, each allocation intervall
         """
         if (step % CREDITS_ALLOCATION_INTERVAL) == 0:
             for agent in self.agents:
@@ -339,23 +339,12 @@ class Environment:
 
             agent.emissions_add(self.randomize_emission_amount(agent))      #new Version: daily emissions
 
-        '''
-        # Old Version
-        # emission allocation by groups
-        
-        for num in range(self.period * self.number_of_agents_per_group,
-                         (self.period + 1) * self.number_of_agents_per_group -1):
 
-            self.agents[num].emissions_add(self.randomize_emission_amount(self.agents[num])) # takes an  agent as an argument
-        self.period = self.period + 1
-        if self.period == self.number_of_agents_group:
-            self.period = 0
-        '''
 
     def averaging(self):
         """
         Calculates averages between every step for:
-        emissions, credits, max buying price and min selling price
+        emissions, credits, max buying price and min selling price, ...
         """
         bought_average = []
         sold_average = []
@@ -401,7 +390,7 @@ class Environment:
 
     def plot_agents(self):
         """
-        in this method we plot several keynumers of the agents
+        in this method we plot the credit and emission path of 3 randomly selected agents
         """
         Nlines = 3
 
@@ -434,7 +423,7 @@ class Environment:
 
     def statistics(self, plots):
         """
-        Draws the statistics
+        calculate and plot key numbers of the model
         """
 
         average_price_bought, average_price_sold, average_emission, average_credits, average_max_buying_price, average_min_selling_price = self.averaging()
@@ -464,11 +453,6 @@ class Environment:
             plt.clf()
 
 
-
-            #plt.plot(average_price_sold)
-            #plt.xlabel('steps')
-            #plt.ylabel('Average prices sold')
-            #plt.show()
             plt.clf()
 
             plt.plot(average_emission, label ="Average amount of Emissions per Agent")
@@ -506,12 +490,12 @@ class Environment:
                     em_red = True,
                  plots = True):
         """
+            • add emission and potentially credits each step
+            • select  buyers and sellers
             • Buyers list sorted by max price
             • Sellers list sorted by min price
-            • Market rules:
-                1. Buyers with higher min prices matches first with the lowest min price -> price = average
-                2. Transaction and actualisation of Buyer/seller list
-                3. Step 3 until all sellers or buyers reached their max sell/buy capacity.
+            • do transactions(rules, highest buyer price with lowest selling price first
+
 
         :version: different level of agent behaviour depending on the version
         """
@@ -521,10 +505,11 @@ class Environment:
             self.add_emission(step)
             self.add_credits(step)
 
-            self.day_of_the_month = step % CREDITS_ALLOCATION_INTERVAL      # computes the day of the month via modulo operator
+            self.day_of_the_month = step % CREDITS_ALLOCATION_INTERVAL
+            # computes the day of the month via modulo operator
 
 
-            if random_sel == False:
+            if random_sel == False:#depends on the setting if agents sellers are randomy selected
                 buyers, sellers, satisfied = self.list_buyers_sellers_satisfied()
             else:
                 buyers, sellers, satisfied = self.list_buyers_sellers_satisfied2()
@@ -533,7 +518,7 @@ class Environment:
             sorted_b, sorted_s = self.sort_buyers_sellers(buyers, sellers)
 
 
-            try:
+            try:#depends on the setting whether agents are allowed to reduce emissions for a deal
                 if em_red ==True:
                     self.do_transactions3(sorted_b, sorted_s, step)
                 else:
