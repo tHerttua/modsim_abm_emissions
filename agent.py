@@ -1,5 +1,5 @@
 #Control the price update
-UPDATE_RATE = 0.05#0.5 makes the model unstable (too much changes, always different outcomes)
+UPDATE_RATE = 0.05
 REDUCE_RATE = 0.3
 
 from math import floor

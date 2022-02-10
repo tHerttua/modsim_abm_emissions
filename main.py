@@ -232,7 +232,7 @@ if __name__ == '__main__':
     # Can Sellers Reduce Emissions after a successful Deal in the same step
     # for addionally selling credits
     #True =  it is possible to reduce emission for a deal
-    em_red = False
+    em_red = True
 
     #Modus
 
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     #modus = 3 is for averaging over the price and transaction numbers development
     # over multiple runs by keeping initial parameters concant several months
 
-    modus = 1
+    modus = 2
 
     #limit transaction is the max number of transactions per agent per step
     #each transaction can just include 1 credit or eventually 1 emission
@@ -267,12 +267,14 @@ if __name__ == '__main__':
 
     #num_agents_group is number of agents per group
 
+    #results are saved in the \pics direcotry!
+
     if modus == 1:
-        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 40, change = 0.02, limit = 3, num_agents_group = 10)
+        chan_cred_red(allowances, random_sel, em_red, limit_transaction = 40, change = 0.02, limit = 3, num_agents_group = 20)
         pass
     elif modus == 2:
-        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 1, change = 20, limit = 5, num_agents_group = 10)
+        chan_tran_limit(allowances, random_sel, em_red, cred_red_rate = 1, change = 50, limit = 5, num_agents_group = 20)
 
     elif modus == 3:
-        many_runs(allowances, random_sel, em_red, limit_transaction = 40, cred_red_rate = 0.96, limit = 20, plots = False, num_agents_group = 10)
+        many_runs(allowances, random_sel, em_red, limit_transaction = 200, cred_red_rate = 0.96, limit = 20, plots = False, num_agents_group = 20)
 

@@ -14,19 +14,15 @@ Upon initialization takes the following parameters:
 
 - Other variables to store the transactions history: prices, deals, emisisons
 
-### 2 Moduls overview
+### 2 Methods overview
 
-To investigate the model, three modules with ploting and calulating results are offered
-  -modul 1: decreases in different runs of the model the credit_reducing facor
-  -modul 2: increases in different runs of the model the limit transaction number per agets
-  -modul 3: runs the model multiple times with the same parameter and calculates the average outcomes and plots it
-  
-Initial values
-  -array of allowances per group
-  -unexpected credit reducing factor
-  -limit transactions
-  -agents per group
-  
+Upon agreeing on a transaction, agents track their state:
+- Number of transactions available for the time step is decreased
+- Current credits are either increased, depending on whether agent bought or sold
+- The buying or selling price may be updated, if no transaction happened during a step
+- Total amount of emissions is accumulated
+- Additionally, there is a chance that an agent can reduce their emission
+
 ## Environment
 
 ### 1 Properties
@@ -34,12 +30,13 @@ Initial values
 Upon initialization, environment takes the arguments:
 - Number of agents per group
 - Number of different groups
-- The time steps (Hard coded for 360)
+- Number of allowance credits to be distributed to each agent
+- The time steps (Hard coded for 365)
 
 Global variables can be modified to control their respective targets:
 - Variance in emissions range
 - Variance in price range
-- Original price per one credit 
+- Original price per one credit
 
 ### 2 Methods overview
 
@@ -65,18 +62,13 @@ or they have reached their limit of how many credits they want to sell or buy
 to buy at and seller lowers the price to sell at
 - After each agent has been iterated through, their transaction limit is reseted for the next time step
 
-
-- agents calculates whether number of credits is enough to reach the end of the month
-- by introducing the credit reduction rate, agents become the rate less credits as expected each month, so we can
-- play in the model with the expectations of the agents
-
 ## The setting
 
-- Each of the companies are allocated x credits (source), initial depends on allowances array
+- There are 300 companies, 3 groups, 100 companies per group
+- Each of the companies are allocated x credits (source)
 - One credit is worth X € (source)
-- The companies do transactions between each other over span a year (360 time steps)
+- The companies do transactions between each other over span a year (365 time steps)
 - Companies accumulate emissions in daily basis towards the total emissions count
-- decide their action also based on the fact how many emissions are left for reaching the end of the month
 - Every month (30 time steps) the companies are allocated more credits
 - Because of the randomization, there can be companies which: 
 have less credits than they have emisions (credit buyers),
@@ -84,18 +76,12 @@ have more credits than they have emissions (credit sellers)
 and those who have equal amount of credits and emissions (satisfied)
 
 ## Results
-- average paid price
-- average number of transaction
-- price expectation development
-- ratio from buyer to seller
-- individuall emission and credit path of agents (just for illustration)
 
 - Different hyper parameters yield ...
 - About prices convergence
-- number of transactions
-- dynamic of the model
-- ratio buy sellers
-- price expectation convergence
+- Emissions reduced
+- What else?
+
 
 
 
